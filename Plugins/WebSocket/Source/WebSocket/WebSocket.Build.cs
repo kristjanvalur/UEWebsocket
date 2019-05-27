@@ -79,12 +79,16 @@ public class WebSocket : ModuleRules
 			}
 			);
 
+        // This file is changed from the official version.
+        // It is assumes that we have a libwebsocket_static422.lib which has been compiled against the 4.22
+        // version of the openssl third party libs.
 
         if (Target.Platform == UnrealTargetPlatform.Win64)
         {
             PublicDefinitions.Add("PLATFORM_UWP=0");
             PrivateDependencyModuleNames.Add("zlib");
-            if (EngineMinorVersion == "21" || EngineMinorVersion == "20")
+            // kards change, also 22
+            if (EngineMinorVersion == "22" || EngineMinorVersion == "21" || EngineMinorVersion == "20")
             {
                 PrivateDependencyModuleNames.Add("OpenSSL");
             }
@@ -94,7 +98,8 @@ public class WebSocket : ModuleRules
             PublicLibraryPaths.Add(strStaticPath);
 
             // for 4.21
-            if(EngineMinorVersion == "21" || EngineMinorVersion == "20")
+            // kards change, also 22
+            if(EngineMinorVersion == "22" || EngineMinorVersion == "21" || EngineMinorVersion == "20")
             {
                 string[] StaticLibrariesX64 = new string[] {
                 "websockets_static.lib",
@@ -107,7 +112,10 @@ public class WebSocket : ModuleRules
             }
             else if(EngineMinorVersion == "22")
             {
+
+                PublicAdditionalLibraries.Add("websockets_static422.lib");
                 // for 4.22
+#if 0
                 if (Target.Type == TargetType.Editor)
                 {
                     PublicAdditionalLibraries.Add("websockets_static422.lib");
@@ -118,6 +126,7 @@ public class WebSocket : ModuleRules
                 {
                     PublicAdditionalLibraries.Add("websockets_game_static422.lib");
                 }
+#endif
             }
 
             
