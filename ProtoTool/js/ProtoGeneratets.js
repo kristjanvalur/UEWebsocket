@@ -3,7 +3,7 @@
 /// <reference path="ProtoGenerate.d.ts" />
 Object.defineProperty(exports, "__esModule", { value: true });
 var fs = require("fs");
-var TsGenerate = (function () {
+var TsGenerate = /** @class */ (function () {
     function TsGenerate() {
     }
     TsGenerate.prototype.Generate = function (moduleName, protoObj) {

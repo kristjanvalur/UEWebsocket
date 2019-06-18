@@ -129,7 +129,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = WebSocket)
 	void Close();
 
-	void Connect(const FString& uri, const TMap<FString, FString>& header);
+	bool Connect(const FString& uri, const TMap<FString, FString>& header);
 
 #if PLATFORM_UWP
 	Concurrency::task<void> ConnectAsync(Platform::String^ uriString);

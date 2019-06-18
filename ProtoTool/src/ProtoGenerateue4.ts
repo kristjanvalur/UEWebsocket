@@ -113,6 +113,9 @@ export class Ue4Generate implements ProtoGenerate.IProtoGenerate{
         var preDefClass = "";
         var body = "";
         var constructorFunction = this.tab(tabCount+1) + "U" + tyname + "();\n";
+        var breaker = this.tab(tabCount+1) + "UFUNCTION(BlueprintPure, Category = \"MessageProto\")\n";
+        var breakTypes = "";
+        var breakBody = "";
 
         this.cppString["U" + tyname] = "U" + tyname + "::" + "U" + tyname + "(){\n"
         
@@ -122,24 +125,48 @@ export class Ue4Generate implements ProtoGenerate.IProtoGenerate{
                 body += this.tab(tabCount + 1) + "UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(ExposeOnSpawn=true), Category = "+this.moduleName + ")\n"
                 body += this.tab(tabCount + 1) + this.convertType(defObj[keys[i]]) + " " + keys[i] + ";\n"
 
+                breakTypes += this.convertType(defObj[keys[i]]) + "& _" + keys[i] + ", ";
+                breakBody  += this.tab(tabCount + 1) + "_" + keys[i] +" = "+ keys[i]+";\n";
+
                 if(this.isArrayType(defObj[keys[i]]) == false && this.isObjectType(defObj[keys[i]]) ){
                     this.cppString["U" + tyname] += this.tab(1) + keys[i] + " = " + "CreateDefaultSubobject<"+ this.getoriginType(defObj[keys[i]]) + ">(TEXT(\""+ keys[i] +"\"));\n";
                 }
             }
+            
             else{
                 preDefClass += this.exportType(tyname+"_" + keys[i], defObj[keys[i]], tabCount, protoObj);
 
                 body += this.tab(tabCount + 1) + "UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(ExposeOnSpawn=true), Category = "+this.moduleName + ")\n"
                 body += this.tab(tabCount + 1) + "U" + tyname+"_" + keys[i] + "* " + keys[i] + ";\n"
 
+                breakTypes +="U" + tyname+"_" + keys[i] + "*& _" + keys[i] + ", ";
+                breakBody  += this.tab(tabCount + 1) + "_" + keys[i] + " = " + keys[i] + ";\n";
+
                 this.cppString["U" + tyname] += this.tab(1) + keys[i] + " = " + "CreateDefaultSubobject<"+ "U" + tyname+"_" + keys[i] + ">(TEXT(\""+ keys[i] + "\"));\n";
             }
+
+            
+
         }
 
         this.cppString["U" + tyname] += "}\n\n"
 
+        
+        
+    
         ret += constructorFunction
         ret += body
+
+        if(!(breakTypes.length == 0)){
+            breakTypes = breakTypes.substring(0, breakTypes.length-2);
+            breaker +=  this.tab(tabCount + 1) + "void Break(" + breakTypes + ");\n";
+            this.cppString["U" + tyname] += "void U" + tyname + "::" + "Break("+ breakTypes +"){\n"
+            this.cppString["U" + tyname] += breakBody + "}\n\n";
+
+            ret += breaker
+        }
+        
+
         ret += this.tab(tabCount) + "};\n\n"
 
         return preDefClass + ret;

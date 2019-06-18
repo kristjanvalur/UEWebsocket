@@ -59,8 +59,8 @@ public:
 	virtual bool IsTickable() const override;
 	virtual TStatId GetStatId() const override;
 
-	UWebSocketBase* Connect(const FString& uri);
-	UWebSocketBase* Connect(const FString& uri, const TMap<FString, FString>& header);
+	UWebSocketBase* Connect(const FString& uri, bool& connectFail);
+	UWebSocketBase* Connect(const FString& uri, const TMap<FString, FString>& header, bool& connectFail);
 #if PLATFORM_UWP
 #elif PLATFORM_HTML5
 #else

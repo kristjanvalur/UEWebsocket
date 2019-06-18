@@ -297,11 +297,11 @@ Concurrency::task<void> UWebSocketBase::SendAsync(Platform::String^ message)
 
 #endif
 
-void UWebSocketBase::Connect(const FString& uri, const TMap<FString, FString>& header)
+bool UWebSocketBase::Connect(const FString& uri, const TMap<FString, FString>& header)
 {
 	if (uri.IsEmpty())
 	{
-		return;
+		return false;
 	}
 
 #if PLATFORM_UWP
@@ -321,15 +321,18 @@ void UWebSocketBase::Connect(const FString& uri, const TMap<FString, FString>& h
 			}
 		}));
 	});
+
+	return true;
 #elif PLATFORM_HTML5
 	mHtml5SocketHelper.Bind(this);
 	std::string strUrl = TCHAR_TO_UTF8(*uri);
 	mWebSocketRef = SocketCreate(strUrl.c_str() );
 	
+	return true;
 #else
 	if (mlwsContext == nullptr)
 	{
-		return;
+		return false;
 	}
 
 	int iUseSSL = 0;
@@ -337,14 +340,14 @@ void UWebSocketBase::Connect(const FString& uri, const TMap<FString, FString>& h
 	if (iPos == INDEX_NONE)
 	{
 		//UE_LOG(WebSocket, Error, TEXT("Invalid Websocket address:%s"), *uri);
-		return;
+		return false;
 	}
 
 	FString strProtocol = uri.Left(iPos);
 	if (strProtocol.ToUpper() != TEXT("WS") && strProtocol.ToUpper() != TEXT("WSS"))
 	{
 		//UE_LOG(WebSocket, Error, TEXT("Invalid Protol:%s"), *strProtocol);
-		return;
+		return false;
 	}
 
 	if (strProtocol.ToUpper() == TEXT("WSS"))
@@ -404,10 +407,12 @@ void UWebSocketBase::Connect(const FString& uri, const TMap<FString, FString>& h
 	if (mlws == nullptr)
 	{
 		UE_LOG(WebSocket, Error, TEXT("create client connect fail"));
-		return;
+		return false;
 	}
 
 	mHeaderMap = header;
+
+	return true;
 #endif
 }
 
