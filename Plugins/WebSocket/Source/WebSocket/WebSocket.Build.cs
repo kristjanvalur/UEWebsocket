@@ -251,11 +251,14 @@ public class WebSocket : ModuleRules
             string strStaticPath = Path.GetFullPath(Path.Combine(ModulePath, "ThirdParty/lib/Android/armeabi-v7a"));
             PublicLibraryPaths.Add(strStaticPath);
 
+            string strStaticArm64Path = Path.GetFullPath(Path.Combine(ModulePath, "ThirdParty/lib/Android/arm64-v8a"));
+            PublicLibraryPaths.Add(strStaticArm64Path);
+
 
             string[] StaticLibrariesAndroid = new string[] {
                 "websockets",
-                //"ssl",
-                //"crypto"
+                "ssl",
+                "crypto"
             };
 
             foreach (string Lib in StaticLibrariesAndroid)

@@ -6,7 +6,7 @@
 	#endif
 #endif
 
-#define LWS_INSTALL_DATADIR "/home/feixuwu/MyCode/libwebsockets/test-server/android/app/src/main/jni/armeabi-v7a/share"
+#define LWS_INSTALL_DATADIR "/mnt/d/GitHub/libwebsocket/test-server/android/app/src/main/jni/armeabi-v7a/share"
 
 /* Define to 1 to use wolfSSL/CyaSSL as a replacement for OpenSSL.
  * LWS_OPENSSL_SUPPORT needs to be set also for this to work. */
@@ -35,7 +35,7 @@
 #define LWS_LIBRARY_VERSION_NUMBER (LWS_LIBRARY_VERSION_MAJOR*1000000)+(LWS_LIBRARY_VERSION_MINOR*1000)+LWS_LIBRARY_VERSION_PATCH
 
 /* The current git commit hash that we're building from */
-#define LWS_BUILD_HASH "feixuwu@DESKTOP-0AAS0SK-v2.0.0-489-g2397fa6"
+#define LWS_BUILD_HASH "root@DESKTOP-5V2FQEE-v2.0.0-500-geaa376ff"
 
 /* Build with OpenSSL support */
 #define LWS_OPENSSL_SUPPORT
