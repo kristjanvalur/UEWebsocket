@@ -146,7 +146,6 @@ typedef unsigned long long lws_intptr_t;
 #if defined(__ANDROID__)
 #include <netinet/in.h>
 #include <unistd.h>
-#define getdtablesize() sysconf(_SC_OPEN_MAX)
 #endif
 
 #endif
@@ -215,8 +214,11 @@ typedef unsigned long long lws_intptr_t;
 #if defined(LWS_WITH_MBEDTLS)
 #if defined(LWS_WITH_ESP32)
 /* this filepath is passed to us but without quotes or <> */
+#if !defined(LWS_AMAZON_RTOS)
+/* AMAZON RTOS has its own setting via MTK_MBEDTLS_CONFIG_FILE */
 #undef MBEDTLS_CONFIG_FILE
 #define MBEDTLS_CONFIG_FILE <mbedtls/esp_config.h>
+#endif
 #endif
 #include <mbedtls/ssl.h>
 #else
