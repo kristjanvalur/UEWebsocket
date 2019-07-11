@@ -83,7 +83,7 @@ int UWebSocketContext::callback_echo(struct lws *wsi, enum lws_callback_reasons 
 
 	switch (reason)
 	{
-	case LWS_CALLBACK_CLOSED:
+	case LWS_CALLBACK_CLIENT_CLOSED:
 		if (!pWebSocketBase) return -1;
 		pWebSocketBase->Cleanlws();
 		pWebSocketBase->OnClosed.Broadcast();
