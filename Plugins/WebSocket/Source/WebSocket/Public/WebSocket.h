@@ -4,6 +4,11 @@
 
 #include "ModuleManager.h"
 
+// logging from the websockets library
+DECLARE_LOG_CATEGORY_EXTERN(LibWebsockets, Log, All);
+// logging from the UEWebsocket library
+DECLARE_LOG_CATEGORY_EXTERN(WebSocket, Log, All);
+
 class FWebSocketModule : public IModuleInterface
 {
 public:

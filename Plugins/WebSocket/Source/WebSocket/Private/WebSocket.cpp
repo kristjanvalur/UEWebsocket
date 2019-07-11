@@ -4,6 +4,9 @@
 
 #define LOCTEXT_NAMESPACE "FWebSocketModule"
 
+DEFINE_LOG_CATEGORY(LibWebsockets);
+DEFINE_LOG_CATEGORY(WebSocket);
+
 void FWebSocketModule::StartupModule()
 {
 	// This code will execute after your module is loaded into memory; the exact timing is specified in the .uplugin file per-module

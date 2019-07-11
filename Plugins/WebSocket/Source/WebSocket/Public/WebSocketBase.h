@@ -27,8 +27,6 @@
 #include "WebSocketBase.generated.h"
 
 
-DEFINE_LOG_CATEGORY_STATIC(WebSocket, Log, All);
-
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FWebSocketConnectError, const FString&, error);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FWebSocketClosed);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FWebSocketConnected);

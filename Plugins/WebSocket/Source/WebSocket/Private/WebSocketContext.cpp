@@ -145,8 +145,31 @@ UWebSocketContext::UWebSocketContext()
 
 extern char g_caArray[];
 
+static void log_handler(int level, const char *line)
+{
+	FString str(line);
+	str.TrimEndInline();
+	if (level == LLL_ERR)
+	{
+		UE_LOG(LibWebsockets, Error, TEXT("lws %d: %s"), level, *str);
+	}
+	else if (level == LLL_WARN)
+	{
+		UE_LOG(LibWebsockets, Warning, TEXT("lws %d: %s"), level, *str);
+	}
+	else {
+		UE_LOG(LibWebsockets, Log, TEXT("lws %d: %s"), level, *str);
+	}
+}
+
 void UWebSocketContext::CreateCtx()
 {
+	int log_level = LLL_ERR | LLL_WARN | LLL_NOTICE;
+#ifdef UE_BUILD_DEBUG
+	log_level |= -LLL_DEBUG;
+#endif
+	lws_set_log_level(log_level, log_handler);
+
 #if PLATFORM_UWP
 #elif PLATFORM_HTML5
 #else
