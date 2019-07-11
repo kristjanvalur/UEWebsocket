@@ -206,11 +206,11 @@ void UWebSocketContext::CreateCtx()
 	}
 	else
 	{
-		UE_LOG(LogInit, Log, TEXT(" websocket: fail open file: '%s'"), *PEMFilename);
+		UE_LOG(WebSocket, Warning, TEXT(" websocket: fail open file: '%s'"), *PEMFilename);
 		UKismetSystemLibrary::PrintString(this, TEXT(" websocket: fail open file:") + PEMFilename, true, true, FLinearColor(0.0, 0.66, 1.0), 1000);
 	}
 	
-	UE_LOG(LogInit, Log, TEXT(" websocket: using generated PEM file: '%s'"), *PEMFilename);
+	UE_LOG(WebSocket, Log, TEXT(" websocket: using generated PEM file: '%s'"), *PEMFilename);
 	//UKismetSystemLibrary::PrintString(this, TEXT("full dir:") + PEMFilename, true, true, FLinearColor(0.0, 0.66, 1.0), 1000);
 
 	info.ssl_ca_filepath = mstrCAPath.c_str();
