@@ -352,7 +352,7 @@ bool UWebSocketBase::Connect(const FString& uri, const TMap<FString, FString>& h
 
 	if (strProtocol.ToUpper() == TEXT("WSS"))
 	{
-		iUseSSL = 2;
+		iUseSSL = LCCSCF_USE_SSL | LCCSCF_ALLOW_SELFSIGNED;
 	}
 
 	FString strHost;
