@@ -335,7 +335,9 @@ bool UWebSocketBase::Connect(const FString& uri, const TMap<FString, FString>& h
 		return false;
 	}
 
-	int iUseSSL = 0;
+	// always use pipelining to avoid sending the "Connection: close" in addition to "Upgrade", which many severs frown upon.
+	int iUseSSL = LCCSCF_PIPELINE;
+
 	int iPos = uri.Find(TEXT(":"));
 	if (iPos == INDEX_NONE)
 	{
@@ -352,7 +354,7 @@ bool UWebSocketBase::Connect(const FString& uri, const TMap<FString, FString>& h
 
 	if (strProtocol.ToUpper() == TEXT("WSS"))
 	{
-		iUseSSL = LCCSCF_USE_SSL | LCCSCF_ALLOW_SELFSIGNED;
+		iUseSSL |= LCCSCF_USE_SSL | LCCSCF_ALLOW_SELFSIGNED;
 	}
 
 	FString strHost;
@@ -379,7 +381,7 @@ bool UWebSocketBase::Connect(const FString& uri, const TMap<FString, FString>& h
 	}
 	else
 	{
-		if (iUseSSL)
+		if (iUseSSL & LCCSCF_USE_SSL)
 		{
 			iPort = 443;
 		}
