@@ -164,9 +164,9 @@ static void log_handler(int level, const char *line)
 
 void UWebSocketContext::CreateCtx()
 {
-	int log_level = LLL_ERR | LLL_WARN | LLL_NOTICE;
-#ifdef UE_BUILD_DEBUG
-	log_level |= -LLL_DEBUG;
+	int log_level = LLL_ERR | LLL_WARN | LLL_NOTICE |LLL_INFO | LLL_CLIENT;
+#if 0 &&	 defined UE_BUILD_DEBUG
+	log_level |= LLL_INFO | LLL_CLIENT | LLL_DEBUG;
 #endif
 	lws_set_log_level(log_level, log_handler);
 
