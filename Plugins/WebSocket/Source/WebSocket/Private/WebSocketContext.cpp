@@ -33,6 +33,8 @@
 
 #define MAX_PAYLOAD	64*1024
 
+#define USE_WEBSOCKET_CA 1  /* rely on the bundle in WebSocketCA. TODO: Allow windows cert store */
+
 extern TSharedPtr<UWebSocketContext> s_websocketCtx;
 
 #if PLATFORM_UWP
@@ -42,13 +44,13 @@ static struct lws_protocols protocols[] = {
 	/* first protocol must always be HTTP handler */
 
 	{
-		"",		/* name - can be overridden with -e */
+		"UEWebsocket",
 		UWebSocketContext::callback_echo,
 		0,
 		MAX_PAYLOAD,
 	},
 	{
-		NULL, NULL, 0		/* End of list */
+		NULL, NULL, 0, 0		/* End of list */
 	}
 };
 
@@ -176,17 +178,19 @@ void UWebSocketContext::CreateCtx()
 	struct lws_context_creation_info info;
 	memset(&info, 0, sizeof info);
 
+	info.port = CONTEXT_PORT_NO_LISTEN;
 	info.protocols = protocols;
+	info.gid = -1;
+	info.uid = -1;
+	info.ws_ping_pong_interval = 0; // can set pingpong here.
 	info.ssl_cert_filepath = NULL;
 	info.ssl_private_key_filepath = NULL;
 
-	info.port = -1;
-	info.gid = -1;
-	info.uid = -1;
 	info.extensions = exts;
-	info.options = LWS_SERVER_OPTION_VALIDATE_UTF8;
+	info.options |= LWS_SERVER_OPTION_VALIDATE_UTF8;
 	info.options |= LWS_SERVER_OPTION_DO_SSL_GLOBAL_INIT;
 
+#if USE_WEBSOCKET_CA
 	FString PEMFilename = FPaths::ProjectSavedDir() / TEXT("ca-bundle.pem");
 	PEMFilename = IFileManager::Get().ConvertToAbsolutePathForExternalAppForRead(*PEMFilename);
 #if PLATFORM_ANDROID
@@ -214,6 +218,8 @@ void UWebSocketContext::CreateCtx()
 	//UKismetSystemLibrary::PrintString(this, TEXT("full dir:") + PEMFilename, true, true, FLinearColor(0.0, 0.66, 1.0), 1000);
 
 	info.client_ssl_ca_filepath = mstrCAPath.c_str();
+#endif
+
 	mlwsContext = lws_create_context(&info);
 	if (mlwsContext == nullptr)
 	{
