@@ -527,6 +527,7 @@ void UWebSocketBase::Cleanlws()
 	if (mlws != nullptr)
 	{
 		lws_set_wsi_user(mlws, NULL);
+		mlws = nullptr;
 	}
 #endif
 }
