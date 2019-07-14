@@ -441,6 +441,7 @@ void UWebSocketBase::SendText(const FString& data)
 	if (mlws != nullptr)
 	{
 		mSendQueue.Add(data);
+		lws_callback_on_writable(mlws);
 	}
 	else
 	{
@@ -463,6 +464,11 @@ void UWebSocketBase::ProcessWriteable()
 		lws_write(mlws, &buf[LWS_PRE], strData.size(), LWS_WRITE_TEXT);
 
 		mSendQueue.RemoveAt(0);
+		if (mSendQueue.Num() > 0 && lws_partial_buffered(mlws))
+		{
+			lws_callback_on_writable(mlws);
+			return;
+		}
 	}
 #endif
 }

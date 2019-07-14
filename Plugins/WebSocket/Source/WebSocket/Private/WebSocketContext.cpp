@@ -256,7 +256,6 @@ void UWebSocketContext::Tick(float DeltaTime)
 #else
 	if (mlwsContext != nullptr)
 	{
-		lws_callback_on_writable_all_protocol(mlwsContext, &protocols[0]);
 		lws_service(mlwsContext, 0);
 	}
 #endif
