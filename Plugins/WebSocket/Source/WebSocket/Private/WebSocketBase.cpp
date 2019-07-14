@@ -21,6 +21,7 @@
 
 #include "WebSocket.h"
 #include <iostream>
+#include <vector>
 #include "WebSocketBase.h"
 
 #if PLATFORM_UWP
@@ -33,7 +34,6 @@
 #include "libwebsockets.h"
 #endif
 
-#define MAX_ECHO_PAYLOAD 64*1024
 
 #if PLATFORM_UWP
 using namespace concurrency;
@@ -432,11 +432,6 @@ void UWebSocketBase::SendText(const FString& data)
 	std::string strData = TCHAR_TO_UTF8(*data);
 	SocketSend(mWebSocketRef, strData.c_str(), (int)strData.size() );
 #else
-	if (data.Len() > MAX_ECHO_PAYLOAD)
-	{
-		UE_LOG(WebSocket, Error, TEXT("too large package to send > MAX_ECHO_PAYLOAD:%d > %d"), data.Len(), MAX_ECHO_PAYLOAD);
-		return;
-	}
 
 	if (mlws != nullptr)
 	{
@@ -459,9 +454,21 @@ void UWebSocketBase::ProcessWriteable()
 	{
 		std::string strData = TCHAR_TO_UTF8(*mSendQueue[0]);
 
-		unsigned char buf[LWS_PRE + MAX_ECHO_PAYLOAD];
-		memcpy(&buf[LWS_PRE], strData.c_str(), strData.size() );
-		lws_write(mlws, &buf[LWS_PRE], strData.size(), LWS_WRITE_TEXT);
+		const size_t sbufsize = LWS_PRE + 512;
+		if (strData.size() + LWS_PRE <= sbufsize)
+		{
+			// static send buffer;
+			unsigned char sbuf[sbufsize];
+			memcpy(&sbuf[LWS_PRE], strData.c_str(), strData.size());
+			lws_write(mlws, &sbuf[LWS_PRE], strData.size(), LWS_WRITE_TEXT);
+		}
+		else
+		{
+			// dynamically allocated send buffer
+			std::vector<unsigned char> dbuf(LWS_PRE, 0);
+			dbuf.insert(dbuf.end(), strData.c_str(), strData.c_str() + strData.size());
+			lws_write(mlws, &dbuf[LWS_PRE], strData.size(), LWS_WRITE_TEXT);
+		}
 
 		mSendQueue.RemoveAt(0);
 		if (mSendQueue.Num() > 0 && lws_partial_buffered(mlws))
