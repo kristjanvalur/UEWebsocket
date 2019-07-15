@@ -168,6 +168,7 @@ UWebSocketBase::UWebSocketBase()
 #else
 	mlwsContext = nullptr;
 	mlws = nullptr;
+	closing = false;
 #endif
 }
 
@@ -190,8 +191,10 @@ void UWebSocketBase::BeginDestroy()
 #else
 	if (mlws != nullptr)
 	{
-		lws_set_wsi_user(mlws, NULL);
+		auto tmp = mlws;
 		mlws = nullptr;
+		lws_set_wsi_user(tmp, NULL);
+		lws_callback_on_writable(tmp);
 	}
 #endif
 }
@@ -513,11 +516,9 @@ void UWebSocketBase::Close()
 #else
 	if (mlws != nullptr)
 	{
-		lws_set_wsi_user(mlws, NULL);
-		mlws = nullptr;
+		closing = true;
+		lws_callback_on_writable(mlws);
 	}
-
-	OnClosed.Broadcast();
 #endif
 }
 

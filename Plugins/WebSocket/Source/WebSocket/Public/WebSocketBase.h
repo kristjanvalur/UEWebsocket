@@ -165,6 +165,7 @@ public:
 #else
 	struct lws_context* mlwsContext;
 	struct lws* mlws;
+	bool closing;
 #endif
 	
 	TArray<FString> mSendQueue;

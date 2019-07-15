@@ -78,38 +78,59 @@ void UWebSocketContext::BeginDestroy()
 #if PLATFORM_UWP
 #elif PLATFORM_HTML5
 #else
+
+// helper to decide to close, below.
+static bool should_close(UWebSocketBase *pWebSocketBase)
+{
+	if (pWebSocketBase)
+	{
+		// a close was requested
+		if (pWebSocketBase->closing)
+		{
+			pWebSocketBase->Cleanlws();
+			pWebSocketBase->OnClosed.Broadcast();
+			return true;
+		}
+	}
+	else
+	{
+		// the WebSocketBase has gone.  Close quietly.
+		return true;
+	}
+	return false;
+}
+
+
 int UWebSocketContext::callback_echo(struct lws *wsi, enum lws_callback_reasons reason, void *user, void *in, size_t len)
 {
-	void* pUser = lws_wsi_user(wsi);
-	UWebSocketBase* pWebSocketBase = (UWebSocketBase*)pUser;
-
+	UWebSocketBase* pWebSocketBase = (UWebSocketBase*)user;
+	
 	switch (reason)
 	{
 	case LWS_CALLBACK_CLIENT_CLOSED:
-		if (!pWebSocketBase) return -1;
+		if (should_close(pWebSocketBase)) return -1;
 		pWebSocketBase->Cleanlws();
 		pWebSocketBase->OnClosed.Broadcast();
 		break;
 
 	case LWS_CALLBACK_CLIENT_CONNECTION_ERROR:
 	{
-		if (!pWebSocketBase) return -1;
 		FString strError = UTF8_TO_TCHAR(in);
 		UE_LOG(WebSocket, Error, TEXT("libwebsocket connect error:%s"), *strError);
+		if (should_close(pWebSocketBase)) return -1;
 		pWebSocketBase->Cleanlws();
 		pWebSocketBase->OnConnectError.Broadcast(strError);
 	}
 		break;
 
 	case LWS_CALLBACK_CLIENT_ESTABLISHED:
-		if (!pWebSocketBase) return -1;
+		if (should_close(pWebSocketBase)) return -1; 
 		pWebSocketBase->OnConnectComplete.Broadcast();
 		break;
 
 	case LWS_CALLBACK_CLIENT_APPEND_HANDSHAKE_HEADER:
 	{
-		if (!pWebSocketBase) return -1;
-
+		if (should_close(pWebSocketBase)) return -1; 
 		unsigned char **p = (unsigned char **)in, *end = (*p) + len;
 		if (!pWebSocketBase->ProcessHeader(p, end))
 		{
@@ -119,12 +140,12 @@ int UWebSocketContext::callback_echo(struct lws *wsi, enum lws_callback_reasons 
 		break;
 
 	case LWS_CALLBACK_CLIENT_RECEIVE:
-		if (!pWebSocketBase) return -1;
+		if (should_close(pWebSocketBase)) return -1; 
 		pWebSocketBase->ProcessRead((const char*)in, (int)len);
 		break;
 
 	case LWS_CALLBACK_CLIENT_WRITEABLE:
-		if (!pWebSocketBase) return -1;
+		if (should_close(pWebSocketBase)) return -1; 
 		pWebSocketBase->ProcessWriteable();
 		break;
 
