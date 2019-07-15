@@ -98,8 +98,7 @@ public class WebSocket : ModuleRules
             PublicLibraryPaths.Add(strStaticPath);
 
             // for 4.21
-            // kards change, also 22
-            if(EngineMinorVersion == "22" || EngineMinorVersion == "21" || EngineMinorVersion == "20")
+            if(EngineMinorVersion == "21" || EngineMinorVersion == "20")
             {
                 string[] StaticLibrariesX64 = new string[] {
                 "websockets_static.lib",
@@ -115,7 +114,8 @@ public class WebSocket : ModuleRules
 
                 PublicAdditionalLibraries.Add("websockets_static422.lib");
                 // for 4.22
-#if 0
+                if (false) // disabled for 1939 games
+                {
                 if (Target.Type == TargetType.Editor)
                 {
                     PublicAdditionalLibraries.Add("websockets_static422.lib");
@@ -126,7 +126,8 @@ public class WebSocket : ModuleRules
                 {
                     PublicAdditionalLibraries.Add("websockets_game_static422.lib");
                 }
-#endif
+                }
+
             }
 
             

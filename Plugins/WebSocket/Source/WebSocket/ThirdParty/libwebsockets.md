@@ -22,6 +22,7 @@
    If ue422 is in `d:\UE4\` you need these additional flags to cmake:
      - -DLWS_OPENSSL_INCLUDE_DIRS=D:\UE4\UE_4.22\Engine\Source\ThirdParty\OpenSSL\1.1.1\Include\Win64\VS2015
      - -DLWS_OPENSSL_LIBRARIES=D:\UE4\UE_4.22\Engine\Source\ThirdParty\OpenSSL\1.1.1\lib\Win64\VS2015\Release\libcrypto.lib;D:\UE4\UE_4.22\Engine\Source\ThirdParty\OpenSSL\1.1.1\lib\Win64\VS2015\Release\libssl.lib
+     - *UPDATE* the above doesn't work, cmake won't be able to make the correct library for some reason.
 
    Verify that CMake has found the correct verision of openssl.
 
