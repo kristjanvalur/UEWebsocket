@@ -222,17 +222,9 @@ typedef unsigned long long lws_intptr_t;
 #endif
 #include <mbedtls/ssl.h>
 #else
-// disable openssl headers for UE4, since they conflict with namespace UI
-//#include <openssl/ssl.h>
-// and provide dummies:
-struct SSL_CTX;
-struct SSL;
-struct EVP_MD;
-struct EVP_MD_CTX;
-struct BIGNUM;
-struct RSA;
+#include <openssl/ssl.h>
 #if !defined(LWS_WITH_MBEDTLS)
-//#include <openssl/err.h>
+#include <openssl/err.h>
 #endif
 #endif
 #endif /* not USE_WOLFSSL */

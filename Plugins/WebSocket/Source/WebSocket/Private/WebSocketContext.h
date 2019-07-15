@@ -28,7 +28,9 @@
 #elif PLATFORM_HTML5
 #elif PLATFORM_WINDOWS  
 #include "PreWindowsApi.h"
+#define UI UI_ST
 #include "libwebsockets.h"
+#undef UI
 #include "PostWindowsApi.h" 
 #else
 #include "libwebsockets.h"

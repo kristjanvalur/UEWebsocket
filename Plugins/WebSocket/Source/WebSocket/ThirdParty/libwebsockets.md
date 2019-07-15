@@ -29,17 +29,7 @@
    It will fail all of the configurations that require DLLS, but the libwebsockets_static.lib will get generated and the
    include files.
 
-7. Copy the include files generated in the d:\inst to the include folder.  Comment out the include of <openssl/ssl.h> and
-   instead, add dummy declerations for the following structs:  
-   ```C++
-   struct SSL_CTX;
-   struct SSL;
-   struct EVP_MD;
-   struct EVP_MD_CTX;
-   struct BIGNUM;
-   struct RSA;
-   ```
-   This is because the headers conflict with some definitions in the UE4 headers. 
+7. Copy the include files generated in the d:\inst to the include folder.
 
 8. copy the libwebsockets_static.lib to the lib folder.  For 4.22 it is called libwebsocket_static422, because
    4.22 contains a different openssl third party library and linking needs to match
