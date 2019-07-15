@@ -31,9 +31,16 @@
 #include "Misc/Base64.h"
 #include <fstream>
 
+#include "SystemCA.h"
+
 #define MAX_PAYLOAD	64*1024
 
-#define USE_WEBSOCKET_CA 1  /* rely on the bundle in WebSocketCA. TODO: Allow windows cert store */
+#if PLATFORM_WINDOWS
+#define USE_WEBSOCKET_CA 0  /* windows can use the built in windows platform bundle */
+#else
+#define USE_WEBSOCKET_CA 1 /* rely on the bundle in WebSocketCA. TODO: Allow windows cert store */
+#endif
+
 
 extern TSharedPtr<UWebSocketContext> s_websocketCtx;
 
@@ -149,6 +156,12 @@ int UWebSocketContext::callback_echo(struct lws *wsi, enum lws_callback_reasons 
 		pWebSocketBase->ProcessWriteable();
 		break;
 
+	case LWS_CALLBACK_OPENSSL_LOAD_EXTRA_CLIENT_VERIFY_CERTS:
+	{
+		add_system_ca_bundle(user);  // user is SSL_CTX*
+		break;
+	}
+
 	default:
 		break;
 	}
@@ -210,8 +223,9 @@ void UWebSocketContext::CreateCtx()
 	info.extensions = exts;
 	info.options |= LWS_SERVER_OPTION_VALIDATE_UTF8;
 	info.options |= LWS_SERVER_OPTION_DO_SSL_GLOBAL_INIT;
-
-#if USE_WEBSOCKET_CA
+#if ! USE_WEBSOCKET_CA
+	info.options |= LWS_SERVER_OPTION_CREATE_VHOST_SSL_CTX;
+#else
 	FString PEMFilename = FPaths::ProjectSavedDir() / TEXT("ca-bundle.pem");
 	PEMFilename = IFileManager::Get().ConvertToAbsolutePathForExternalAppForRead(*PEMFilename);
 #if PLATFORM_ANDROID
