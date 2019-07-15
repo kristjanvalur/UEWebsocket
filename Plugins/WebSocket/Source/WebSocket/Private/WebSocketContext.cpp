@@ -187,7 +187,7 @@ static void log_handler(int level, const char *line)
 
 void UWebSocketContext::CreateCtx()
 {
-	int log_level = LLL_ERR | LLL_WARN | LLL_NOTICE |LLL_INFO | LLL_CLIENT;
+	int log_level = LLL_ERR | LLL_WARN | LLL_NOTICE;
 #if 0 &&	 defined UE_BUILD_DEBUG
 	log_level |= LLL_INFO | LLL_CLIENT | LLL_DEBUG;
 #endif
