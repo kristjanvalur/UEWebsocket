@@ -148,7 +148,7 @@ int UWebSocketContext::callback_echo(struct lws *wsi, enum lws_callback_reasons 
 
 	case LWS_CALLBACK_CLIENT_RECEIVE:
 		if (should_close(pWebSocketBase)) return -1; 
-		pWebSocketBase->ProcessRead((const char*)in, (int)len);
+		pWebSocketBase->ProcessRead((const char*)in, (int)len, !!lws_frame_is_binary(wsi));
 		break;
 
 	case LWS_CALLBACK_CLIENT_WRITEABLE:

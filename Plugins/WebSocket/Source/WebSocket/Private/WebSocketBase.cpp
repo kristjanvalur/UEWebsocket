@@ -435,7 +435,10 @@ void UWebSocketBase::SendText(const FString& data)
 
 	if (mlws != nullptr)
 	{
-		mSendQueue.Add(data);
+		SendQueueEntry entry;
+		entry.binary = false;
+		entry.str = data;
+		mSendQueue.Add(entry);
 		lws_callback_on_writable(mlws);
 	}
 	else
@@ -445,6 +448,30 @@ void UWebSocketBase::SendText(const FString& data)
 #endif
 }
 
+void UWebSocketBase::SendBinary(const TArray<uint8>& data)
+{
+#if PLATFORM_UWP
+	
+#elif PLATFORM_HTML5
+	
+#else
+
+	if (mlws != nullptr)
+	{
+		SendQueueEntry entry;
+		entry.binary = true;
+		entry.bin = data;
+		mSendQueue.Add(entry);
+		lws_callback_on_writable(mlws);
+	}
+	else
+	{
+		UE_LOG(WebSocket, Error, TEXT("the socket is closed, SendBinary fail"));
+	}
+#endif
+}
+
+
 void UWebSocketBase::ProcessWriteable()
 {
 #if PLATFORM_UWP
@@ -452,22 +479,14 @@ void UWebSocketBase::ProcessWriteable()
 #else
 	while (mSendQueue.Num() > 0)
 	{
-		std::string strData = TCHAR_TO_UTF8(*mSendQueue[0]);
-
-		const size_t sbufsize = LWS_PRE + 512;
-		if (strData.size() + LWS_PRE <= sbufsize)
+		if (!mSendQueue[0].binary)
 		{
-			// static send buffer;
-			unsigned char sbuf[sbufsize];
-			memcpy(&sbuf[LWS_PRE], strData.c_str(), strData.size());
-			lws_write(mlws, &sbuf[LWS_PRE], strData.size(), LWS_WRITE_TEXT);
+			std::string strData = TCHAR_TO_UTF8(*mSendQueue[0].str);
+			ProcessWriteableRaw((const unsigned char*)strData.c_str(), strData.size(), false);
 		}
 		else
 		{
-			// dynamically allocated send buffer
-			std::vector<unsigned char> dbuf(LWS_PRE, 0);
-			dbuf.insert(dbuf.end(), strData.c_str(), strData.c_str() + strData.size());
-			lws_write(mlws, &dbuf[LWS_PRE], strData.size(), LWS_WRITE_TEXT);
+			ProcessWriteableRaw(mSendQueue[0].bin.GetData(), mSendQueue[0].bin.Num(), true);
 		}
 
 		mSendQueue.RemoveAt(0);
@@ -480,10 +499,40 @@ void UWebSocketBase::ProcessWriteable()
 #endif
 }
 
-void UWebSocketBase::ProcessRead(const char* in, int len)
+void UWebSocketBase::ProcessWriteableRaw(const unsigned char *data, size_t datalen, bool binary)
 {
-	FString strData = UTF8_TO_TCHAR(in);
-	OnReceiveData.Broadcast(strData);
+	const size_t sbufsize = LWS_PRE + 512;
+
+	if (datalen + LWS_PRE <= sbufsize)
+	{
+		// static send buffer
+		unsigned char sbuf[sbufsize];
+		memcpy(&sbuf[LWS_PRE], data, datalen);
+		lws_write(mlws, &sbuf[LWS_PRE], datalen, binary ? LWS_WRITE_BINARY : LWS_WRITE_TEXT);
+	}
+	else
+	{
+		// dynamically allocated send buffer
+		std::vector<unsigned char> dbuf(LWS_PRE, 0);
+		dbuf.insert(dbuf.end(), data, data + datalen);
+		lws_write(mlws, &dbuf[LWS_PRE], datalen, binary ? LWS_WRITE_BINARY : LWS_WRITE_TEXT);
+	}
+}
+
+void UWebSocketBase::ProcessRead(const char* in, int len, bool binary)
+{
+	if (!binary)
+	{
+		FString strData = UTF8_TO_TCHAR(in);
+		UE_LOG(WebSocket, Log, TEXT("Got text package %d bytes"), len);
+		OnReceiveData.Broadcast(strData);
+	}
+	else
+	{
+		TArray<uint8> binData((const uint8*)in, len);
+		UE_LOG(WebSocket, Log, TEXT("Got bin package %d bytes"), len);
+		OnReceiveBinary.Broadcast(binData);
+	}
 }
 
 

@@ -31,6 +31,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FWebSocketConnectError, const FStrin
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FWebSocketClosed);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FWebSocketConnected);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FWebSocketRecieve, const FString&, data);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FWebSocketRecieveBinary, const TArray<uint8>&, data);
 
 
 #if PLATFORM_UWP
@@ -108,6 +109,13 @@ struct lws_context;
 struct lws;
 #endif
 
+struct SendQueueEntry
+{
+	bool binary;
+	FString str;
+	TArray<uint8> bin;
+};
+
 /**
  * 
  */
@@ -123,6 +131,9 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category = WebSocket)
 	void SendText(const FString& data);
+
+	UFUNCTION(BlueprintCallable, Category = WebSocket)
+	void SendBinary(const TArray<uint8> &data);
 
 	UFUNCTION(BlueprintCallable, Category = WebSocket)
 	void Close();
@@ -148,9 +159,13 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = WebSocket)
 	FWebSocketRecieve OnReceiveData;
 
+	UPROPERTY(BlueprintAssignable, Category = WebSocket)
+	FWebSocketRecieveBinary OnReceiveBinary;
+
 	void Cleanlws();
 	void ProcessWriteable();
-	void ProcessRead(const char* in, int len);
+	void ProcessWriteableRaw(const unsigned char *data, size_t datalen, bool binary);
+	void ProcessRead(const char* in, int len, bool binary);
 	bool ProcessHeader(unsigned char** p, unsigned char* end);
 
 #if PLATFORM_UWP
@@ -168,6 +183,6 @@ public:
 	bool closing;
 #endif
 	
-	TArray<FString> mSendQueue;
+	TArray<SendQueueEntry> mSendQueue;
 	TMap<FString, FString> mHeaderMap;
 };
