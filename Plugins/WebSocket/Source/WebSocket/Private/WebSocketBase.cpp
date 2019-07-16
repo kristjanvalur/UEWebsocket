@@ -438,7 +438,7 @@ void UWebSocketBase::SendText(const FString& data)
 		SendQueueEntry entry;
 		entry.binary = false;
 		entry.str = data;
-		mSendQueue.Add(entry);
+		mSendQueue.AddTail(entry);
 		lws_callback_on_writable(mlws);
 	}
 	else
@@ -461,7 +461,7 @@ void UWebSocketBase::SendBinary(const TArray<uint8>& data)
 		SendQueueEntry entry;
 		entry.binary = true;
 		entry.bin = data;
-		mSendQueue.Add(entry);
+		mSendQueue.AddTail(entry);
 		lws_callback_on_writable(mlws);
 	}
 	else
@@ -479,17 +479,18 @@ void UWebSocketBase::ProcessWriteable()
 #else
 	while (mSendQueue.Num() > 0)
 	{
-		if (!mSendQueue[0].binary)
+		auto &entry = mSendQueue.GetHead()->GetValue();
+		if (!entry.binary)
 		{
-			std::string strData = TCHAR_TO_UTF8(*mSendQueue[0].str);
+			std::string strData = TCHAR_TO_UTF8(*entry.str);
 			ProcessWriteableRaw((const unsigned char*)strData.c_str(), strData.size(), false);
 		}
 		else
 		{
-			ProcessWriteableRaw(mSendQueue[0].bin.GetData(), mSendQueue[0].bin.Num(), true);
+			ProcessWriteableRaw(entry.bin.GetData(), entry.bin.Num(), true);
 		}
 
-		mSendQueue.RemoveAt(0);
+		mSendQueue.RemoveNode(mSendQueue.GetHead(), true);
 		if (mSendQueue.Num() > 0 && lws_partial_buffered(mlws))
 		{
 			lws_callback_on_writable(mlws);
@@ -524,13 +525,11 @@ void UWebSocketBase::ProcessRead(const char* in, int len, bool binary)
 	if (!binary)
 	{
 		FString strData = UTF8_TO_TCHAR(in);
-		UE_LOG(WebSocket, Log, TEXT("Got text package %d bytes"), len);
 		OnReceiveData.Broadcast(strData);
 	}
 	else
 	{
 		TArray<uint8> binData((const uint8*)in, len);
-		UE_LOG(WebSocket, Log, TEXT("Got bin package %d bytes"), len);
 		OnReceiveBinary.Broadcast(binData);
 	}
 }

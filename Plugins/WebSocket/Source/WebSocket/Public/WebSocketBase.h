@@ -183,6 +183,6 @@ public:
 	bool closing;
 #endif
 	
-	TArray<SendQueueEntry> mSendQueue;
+	TDoubleLinkedList<SendQueueEntry> mSendQueue;
 	TMap<FString, FString> mHeaderMap;
 };
