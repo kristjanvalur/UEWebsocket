@@ -151,7 +151,11 @@ TStatId FHtml5SocketHelper::GetStatId() const
 
 #endif
 
-
+SendQueueEntry::SendQueueEntry(bool _binary, const uint8 *indata, size_t datalen)
+	: binary(binary), data(LWS_PRE, 0), datalen(datalen)
+{
+	data.insert(data.end(), indata, indata + datalen);
+}
 
 
 UWebSocketBase::UWebSocketBase()
@@ -435,10 +439,8 @@ void UWebSocketBase::SendText(const FString& data)
 
 	if (mlws != nullptr)
 	{
-		SendQueueEntry entry;
-		entry.binary = false;
-		entry.str = data;
-		mSendQueue.AddTail(entry);
+		FTCHARToUTF8 utf8(*data);
+		mSendQueue.AddTail(SendQueueEntry(false, (const unsigned char*)utf8.Get(), utf8.Length()));
 		lws_callback_on_writable(mlws);
 	}
 	else
@@ -458,10 +460,7 @@ void UWebSocketBase::SendBinary(const TArray<uint8>& data)
 
 	if (mlws != nullptr)
 	{
-		SendQueueEntry entry;
-		entry.binary = true;
-		entry.bin = data;
-		mSendQueue.AddTail(entry);
+		mSendQueue.AddTail(SendQueueEntry(true, data.GetData(), data.Num()));
 		lws_callback_on_writable(mlws);
 	}
 	else
@@ -480,15 +479,7 @@ void UWebSocketBase::ProcessWriteable()
 	while (mSendQueue.Num() > 0)
 	{
 		auto &entry = mSendQueue.GetHead()->GetValue();
-		if (!entry.binary)
-		{
-			std::string strData = TCHAR_TO_UTF8(*entry.str);
-			ProcessWriteableRaw((const unsigned char*)strData.c_str(), strData.size(), false);
-		}
-		else
-		{
-			ProcessWriteableRaw(entry.bin.GetData(), entry.bin.Num(), true);
-		}
+		lws_write(mlws, &entry.data[LWS_PRE], entry.datalen, entry.binary ? LWS_WRITE_BINARY : LWS_WRITE_TEXT);
 
 		mSendQueue.RemoveNode(mSendQueue.GetHead(), true);
 		if (mSendQueue.Num() > 0 && lws_partial_buffered(mlws))
@@ -500,25 +491,6 @@ void UWebSocketBase::ProcessWriteable()
 #endif
 }
 
-void UWebSocketBase::ProcessWriteableRaw(const unsigned char *data, size_t datalen, bool binary)
-{
-	const size_t sbufsize = LWS_PRE + 512;
-
-	if (datalen + LWS_PRE <= sbufsize)
-	{
-		// static send buffer
-		unsigned char sbuf[sbufsize];
-		memcpy(&sbuf[LWS_PRE], data, datalen);
-		lws_write(mlws, &sbuf[LWS_PRE], datalen, binary ? LWS_WRITE_BINARY : LWS_WRITE_TEXT);
-	}
-	else
-	{
-		// dynamically allocated send buffer
-		std::vector<unsigned char> dbuf(LWS_PRE, 0);
-		dbuf.insert(dbuf.end(), data, data + datalen);
-		lws_write(mlws, &dbuf[LWS_PRE], datalen, binary ? LWS_WRITE_BINARY : LWS_WRITE_TEXT);
-	}
-}
 
 void UWebSocketBase::ProcessRead(const char* in, int len, bool binary)
 {

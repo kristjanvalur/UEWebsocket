@@ -24,6 +24,7 @@
 #include "Components/ActorComponent.h"
 #include "UObject/NoExportTypes.h"
 #include "Delegates/DelegateCombinations.h"
+#include <vector>
 #include "WebSocketBase.generated.h"
 
 
@@ -111,9 +112,11 @@ struct lws;
 
 struct SendQueueEntry
 {
+	SendQueueEntry(bool binary, const uint8 *data, size_t datalen);
+
 	bool binary;
-	FString str;
-	TArray<uint8> bin;
+	std::vector<unsigned char> data;
+	size_t datalen;
 };
 
 /**
@@ -164,7 +167,6 @@ public:
 
 	void Cleanlws();
 	void ProcessWriteable();
-	void ProcessWriteableRaw(const unsigned char *data, size_t datalen, bool binary);
 	void ProcessRead(const char* in, int len, bool binary);
 	bool ProcessHeader(unsigned char** p, unsigned char* end);
 
