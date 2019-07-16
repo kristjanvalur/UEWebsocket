@@ -9,13 +9,13 @@ set LWS=D:\git\libwebsockets
 set INST=D:\inst
 set VISUAL_STUDIO=C:\Program Files (x86)\Microsoft Visual Studio
 rem CMAKE needs to run only after you update the sources, otherwise you can skip it for faster turnaround.
-set RUN_CMAKE=0
+set RUN_CMAKE=1
 set RUN_BUILD=1
 set RUN_INSTALL=1
-set COPY_HEADERS=0
+set COPY_HEADERS=1
 set COPY_LIBS=1
 rem set Debug/Release
-set CONFIGURATION=Debug
+set CONFIGURATION=Release
 
 set DEST=%~dp0..
 
