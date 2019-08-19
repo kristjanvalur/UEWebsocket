@@ -152,7 +152,7 @@ TStatId FHtml5SocketHelper::GetStatId() const
 #endif
 
 SendQueueEntry::SendQueueEntry(bool _binary, const uint8 *indata, size_t datalen)
-	: binary(binary), data(LWS_PRE, 0), datalen(datalen)
+	: binary(_binary), data(LWS_PRE, 0), datalen(datalen)
 {
 	data.insert(data.end(), indata, indata + datalen);
 }
