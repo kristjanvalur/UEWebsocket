@@ -49,9 +49,9 @@ static bool GetTextFromObject(const TSharedRef<FJsonObject>& Obj, FText& TextOut
 	return false;
 }
 
-void UWebSocketBlueprintLibrary::CreateContext(FWebSocketContextOptions ContextOptions)
+void UWebSocketBlueprintLibrary::CreateStaticContext(FWebSocketContextOptions ContextOptions)
 {
-	DestroyContext();
+	DestroyStaticContext();
 	if (s_websocketCtx.Get() == nullptr)
 	{
 		s_websocketCtx = MakeShareable(NewObject<UWebSocketContext>());
@@ -60,7 +60,7 @@ void UWebSocketBlueprintLibrary::CreateContext(FWebSocketContextOptions ContextO
 	}
 }
 
-void UWebSocketBlueprintLibrary::DestroyContext()
+void UWebSocketBlueprintLibrary::DestroyStaticContext()
 {
 	if (s_websocketCtx.Get() != nullptr)
 	{
@@ -74,7 +74,7 @@ UWebSocketBase* UWebSocketBlueprintLibrary::Connect(const FString& url, FWebSock
 {
 	if (s_websocketCtx.Get() == nullptr)
 	{
-		CreateContext(FWebSocketContextOptions());
+		CreateStaticContext(FWebSocketContextOptions());
 	}
 	return s_websocketCtx->Connect(url, TMap<FString, FString>(), ConnectOptions, connectFail);
 }
@@ -83,7 +83,7 @@ UWebSocketBase* UWebSocketBlueprintLibrary::ConnectWithHeader(const FString& url
 {
 	if(s_websocketCtx.Get() == nullptr)
 	{
-		CreateContext(FWebSocketContextOptions());
+		CreateStaticContext(FWebSocketContextOptions());
 	}
 
 	TMap<FString, FString> headerMap;
