@@ -87,11 +87,19 @@ class WEBSOCKET_API UWebSocketBlueprintLibrary : public UBlueprintFunctionLibrar
 	GENERATED_BODY()
 public:
 
+	// Create or replace the global web socket context
 	UFUNCTION(BlueprintCallable, Category = "WebSocket")
-	static UWebSocketBase* Connect(const FString& url, FWebSocketConnectOptions ConnectOptions, FWebSocketContextOptions ContextOptions, bool& connectFail);
+	static void CreateContext(FWebSocketContextOptions ContextOptions);
+
+	// Destroy the global web socket context
+	UFUNCTION(BlueprintCallable, Category = "WebSocket")
+	static void DestroyContext();
 
 	UFUNCTION(BlueprintCallable, Category = "WebSocket")
-	static UWebSocketBase* ConnectWithHeader(const FString& url, const TArray<FWebSocketHeaderPair>& header, FWebSocketConnectOptions ConnectOptions, FWebSocketContextOptions ContextOptions, bool& connectFail);
+	static UWebSocketBase* Connect(const FString& url, FWebSocketConnectOptions ConnectOptions, bool& connectFail);
+
+	UFUNCTION(BlueprintCallable, Category = "WebSocket")
+	static UWebSocketBase* ConnectWithHeader(const FString& url, const TArray<FWebSocketHeaderPair>& header, FWebSocketConnectOptions ConnectOptions, bool& connectFail);
 
 	UFUNCTION(BlueprintCallable, Category = "WebSocket")
 	static UObject* JsonToObject(const FString& data, UClass * StructDefinition, bool checkAll);

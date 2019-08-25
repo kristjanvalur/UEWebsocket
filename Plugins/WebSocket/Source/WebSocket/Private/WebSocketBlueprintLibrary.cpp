@@ -49,27 +49,41 @@ static bool GetTextFromObject(const TSharedRef<FJsonObject>& Obj, FText& TextOut
 	return false;
 }
 
-
-
-UWebSocketBase* UWebSocketBlueprintLibrary::Connect(const FString& url, FWebSocketConnectOptions ConnectOptions, FWebSocketContextOptions ContextOptions, bool& connectFail)
+void UWebSocketBlueprintLibrary::CreateContext(FWebSocketContextOptions ContextOptions)
 {
-	if (s_websocketCtx.Get() == nullptr)
-	{
-		s_websocketCtx =  MakeShareable(NewObject<UWebSocketContext>() );
-		s_websocketCtx->CreateCtx(ContextOptions);
-		s_websocketCtx->AddToRoot();
-	}
-
-	return s_websocketCtx->Connect(url, TMap<FString, FString>(), ConnectOptions, connectFail);
-}
-
-UWebSocketBase* UWebSocketBlueprintLibrary::ConnectWithHeader(const FString& url, const TArray<FWebSocketHeaderPair>& header, FWebSocketConnectOptions ConnectOptions, FWebSocketContextOptions ContextOptions, bool& connectFail)
-{
+	DestroyContext();
 	if (s_websocketCtx.Get() == nullptr)
 	{
 		s_websocketCtx = MakeShareable(NewObject<UWebSocketContext>());
 		s_websocketCtx->CreateCtx(ContextOptions);
 		s_websocketCtx->AddToRoot();
+	}
+}
+
+void UWebSocketBlueprintLibrary::DestroyContext()
+{
+	if (s_websocketCtx.Get() != nullptr)
+	{
+		s_websocketCtx->DestroyCtx();
+		s_websocketCtx->RemoveFromRoot();
+		s_websocketCtx.Reset();
+	}
+}
+
+UWebSocketBase* UWebSocketBlueprintLibrary::Connect(const FString& url, FWebSocketConnectOptions ConnectOptions, bool& connectFail)
+{
+	if (s_websocketCtx.Get() == nullptr)
+	{
+		CreateContext(FWebSocketContextOptions());
+	}
+	return s_websocketCtx->Connect(url, TMap<FString, FString>(), ConnectOptions, connectFail);
+}
+
+UWebSocketBase* UWebSocketBlueprintLibrary::ConnectWithHeader(const FString& url, const TArray<FWebSocketHeaderPair>& header, FWebSocketConnectOptions ConnectOptions, bool& connectFail)
+{
+	if(s_websocketCtx.Get() == nullptr)
+	{
+		CreateContext(FWebSocketContextOptions());
 	}
 
 	TMap<FString, FString> headerMap;

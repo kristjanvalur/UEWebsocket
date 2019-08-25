@@ -79,6 +79,7 @@ static const struct lws_extension exts[] = {
 void UWebSocketContext::BeginDestroy()
 {
 	Super::BeginDestroy();
+	DestroyCtx();
 	s_websocketCtx.Reset();
 }
 
@@ -270,6 +271,15 @@ void UWebSocketContext::CreateCtx(const FWebSocketContextOptions &options)
 		//UE_LOG(WebSocket, Error, TEXT("libwebsocket Init fail"));
 	}
 #endif
+}
+
+void UWebSocketContext::DestroyCtx()
+{
+	if (mlwsContext != nullptr)
+	{
+		lws_context_destroy(mlwsContext);
+		mlwsContext = nullptr;
+	}
 }
 
 void UWebSocketContext::Tick(float DeltaTime)
