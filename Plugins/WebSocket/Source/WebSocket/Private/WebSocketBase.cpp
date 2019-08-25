@@ -409,7 +409,7 @@ bool UWebSocketBase::Connect(const FString& uri, const TMap<FString, FString>& h
 	connectInfo.context = mlwsContext;
 	connectInfo.address = stdAddress.c_str();
 	connectInfo.port = iPort;
-	connectInfo.ssl_connection = ssl_options | LCCSCF_PIPELINE | (bUseSSL ? LCCSCF_USE_SSL : 0);
+	connectInfo.ssl_connection = ssl_options | (bUseSSL ? LCCSCF_USE_SSL : 0);
 	connectInfo.path = stdPath.c_str();
 	connectInfo.host = stdHost.c_str();
 	connectInfo.origin = stdHost.c_str();
