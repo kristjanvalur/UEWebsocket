@@ -285,7 +285,7 @@ TStatId UWebSocketContext::GetStatId() const
 	return TStatId();
 }
 
-UWebSocketBase* UWebSocketContext::Connect(const FString& uri, const TMap<FString, FString>& header, bool& connectFail)
+UWebSocketBase* UWebSocketContext::Connect(const FString& uri, const TMap<FString, FString>& header, const FWebSocketConnectOptions &options, bool& connectFail)
 {
 #if PLATFORM_UWP
 #elif PLATFORM_HTML5
@@ -303,13 +303,12 @@ UWebSocketBase* UWebSocketContext::Connect(const FString& uri, const TMap<FStrin
 #else
 	pNewSocketBase->mlwsContext = mlwsContext;
 #endif
-
-	connectFail = !(pNewSocketBase->Connect(uri, header) );
+	connectFail = !(pNewSocketBase->Connect(uri, header, options) );
 
 	return pNewSocketBase;
 }
 
 UWebSocketBase* UWebSocketContext::Connect(const FString& uri, bool& connectFail)
 {
-	return Connect(uri, TMap<FString, FString>(), connectFail);
+	return Connect(uri, TMap<FString, FString>(), FWebSocketConnectOptions(), connectFail);
 }

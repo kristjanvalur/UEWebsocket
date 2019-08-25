@@ -304,7 +304,7 @@ Concurrency::task<void> UWebSocketBase::SendAsync(Platform::String^ message)
 
 #endif
 
-bool UWebSocketBase::Connect(const FString& uri, const TMap<FString, FString>& header)
+bool UWebSocketBase::Connect(const FString& uri, const TMap<FString, FString>& header, const FWebSocketConnectOptions& options)
 {
 	if (uri.IsEmpty())
 	{
@@ -312,7 +312,7 @@ bool UWebSocketBase::Connect(const FString& uri, const TMap<FString, FString>& h
 	}
 
 #if PLATFORM_UWP
-	ConnectAsync(ref new String(*uri) ).then([this]()
+	ConnectAsync(ref new String(*uri)).then([this]()
 	{
 		Windows::ApplicationModel::Core::CoreApplication::MainView->Dispatcher->RunAsync(
 			Windows::UI::Core::CoreDispatcherPriority::Normal,
@@ -324,7 +324,7 @@ bool UWebSocketBase::Connect(const FString& uri, const TMap<FString, FString>& h
 			}
 			else
 			{
-				OnConnectError.Broadcast(TEXT("connect error") );
+				OnConnectError.Broadcast(TEXT("connect error"));
 			}
 		}));
 	});
@@ -333,8 +333,8 @@ bool UWebSocketBase::Connect(const FString& uri, const TMap<FString, FString>& h
 #elif PLATFORM_HTML5
 	mHtml5SocketHelper.Bind(this);
 	std::string strUrl = TCHAR_TO_UTF8(*uri);
-	mWebSocketRef = SocketCreate(strUrl.c_str() );
-	
+	mWebSocketRef = SocketCreate(strUrl.c_str());
+
 	return true;
 #else
 	if (mlwsContext == nullptr)
@@ -342,8 +342,13 @@ bool UWebSocketBase::Connect(const FString& uri, const TMap<FString, FString>& h
 		return false;
 	}
 
-	// always use pipelining to avoid sending the "Connection: close" in addition to "Upgrade", which many severs frown upon.
-	int iUseSSL = LCCSCF_PIPELINE;
+	int ssl_options =
+		(options.bAllowSelfSigned ? LCCSCF_ALLOW_SELFSIGNED : 0) |
+		(options.bSkipServerCertHostnameCheck ? LCCSCF_SKIP_SERVER_CERT_HOSTNAME_CHECK : 0) |
+		(options.bAllowExpired ? LCCSCF_ALLOW_EXPIRED : 0) |
+		(options.bPipeline ? LCCSCF_PIPELINE : 0);
+
+	int bUseSSL = false;
 
 	int iPos = uri.Find(TEXT(":"));
 	if (iPos == INDEX_NONE)
@@ -361,7 +366,7 @@ bool UWebSocketBase::Connect(const FString& uri, const TMap<FString, FString>& h
 
 	if (strProtocol.ToUpper() == TEXT("WSS"))
 	{
-		iUseSSL |= LCCSCF_USE_SSL | LCCSCF_ALLOW_SELFSIGNED;
+		bUseSSL = true;
 	}
 
 	FString strHost;
@@ -388,7 +393,7 @@ bool UWebSocketBase::Connect(const FString& uri, const TMap<FString, FString>& h
 	}
 	else
 	{
-		if (iUseSSL & LCCSCF_USE_SSL)
+		if (bUseSSL)
 		{
 			iPort = 443;
 		}
@@ -404,7 +409,7 @@ bool UWebSocketBase::Connect(const FString& uri, const TMap<FString, FString>& h
 	connectInfo.context = mlwsContext;
 	connectInfo.address = stdAddress.c_str();
 	connectInfo.port = iPort;
-	connectInfo.ssl_connection = iUseSSL;
+	connectInfo.ssl_connection = ssl_options | LCCSCF_PIPELINE | (bUseSSL ? LCCSCF_USE_SSL : 0);
 	connectInfo.path = stdPath.c_str();
 	connectInfo.host = stdHost.c_str();
 	connectInfo.origin = stdHost.c_str();

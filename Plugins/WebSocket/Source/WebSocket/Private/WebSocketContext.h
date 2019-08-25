@@ -38,6 +38,8 @@
 
 #include <iostream>
 
+#include "WebSocketBase.h"
+
 #include "WebSocketContext.generated.h"
 
 
@@ -62,7 +64,7 @@ public:
 	virtual TStatId GetStatId() const override;
 
 	UWebSocketBase* Connect(const FString& uri, bool& connectFail);
-	UWebSocketBase* Connect(const FString& uri, const TMap<FString, FString>& header, bool& connectFail);
+	UWebSocketBase* Connect(const FString& uri, const TMap<FString, FString>& header, const FWebSocketConnectOptions &options, bool& connectFail);
 #if PLATFORM_UWP
 #elif PLATFORM_HTML5
 #else

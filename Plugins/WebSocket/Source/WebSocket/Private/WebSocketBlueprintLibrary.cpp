@@ -51,7 +51,7 @@ static bool GetTextFromObject(const TSharedRef<FJsonObject>& Obj, FText& TextOut
 
 
 
-UWebSocketBase* UWebSocketBlueprintLibrary::Connect(const FString& url, bool& connectFail)
+UWebSocketBase* UWebSocketBlueprintLibrary::Connect(const FString& url, const FWebSocketConnectOptions &options, bool& connectFail)
 {
 	if (s_websocketCtx.Get() == nullptr)
 	{
@@ -60,10 +60,10 @@ UWebSocketBase* UWebSocketBlueprintLibrary::Connect(const FString& url, bool& co
 		s_websocketCtx->AddToRoot();
 	}
 
-	return s_websocketCtx->Connect(url, TMap<FString, FString>(), connectFail);
+	return s_websocketCtx->Connect(url, TMap<FString, FString>(), options, connectFail);
 }
 
-UWebSocketBase* UWebSocketBlueprintLibrary::ConnectWithHeader(const FString& url, const TArray<FWebSocketHeaderPair>& header, bool& connectFail)
+UWebSocketBase* UWebSocketBlueprintLibrary::ConnectWithHeader(const FString& url, const TArray<FWebSocketHeaderPair>& header, const FWebSocketConnectOptions &options, bool& connectFail)
 {
 	if (s_websocketCtx.Get() == nullptr)
 	{
@@ -78,7 +78,7 @@ UWebSocketBase* UWebSocketBlueprintLibrary::ConnectWithHeader(const FString& url
 		headerMap.Add(header[i].key, header[i].value);
 	}
 
-	return s_websocketCtx->Connect(url, headerMap, connectFail);
+	return s_websocketCtx->Connect(url, headerMap, options, connectFail);
 }
 
 bool UWebSocketBlueprintLibrary::GetJsonIntField(const FString& data, const FString& key, int& iValue)

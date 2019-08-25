@@ -119,6 +119,28 @@ struct SendQueueEntry
 	size_t datalen;
 };
 
+USTRUCT(BlueprintType)
+struct FWebSocketConnectOptions
+{
+	GENERATED_USTRUCT_BODY()
+
+	// Allow self signed certificates
+	UPROPERTY(Category = "Websocket", EditAnywhere, Blueprintreadwrite)
+	bool bAllowSelfSigned = false;
+
+	// Do not verify server hostname
+	UPROPERTY(Category = "Websocket", EditAnywhere, Blueprintreadwrite)
+		bool bSkipServerCertHostnameCheck = false;
+
+	// Allow expired certificates
+	UPROPERTY(Category = "Websocket", EditAnywhere, Blueprintreadwrite)
+		bool bAllowExpired = false;
+
+	// Pipeline http requests
+	UPROPERTY(Category = "Websocket", EditAnywhere, Blueprintreadwrite)
+	bool bPipeline = false;
+};
+
 /**
  * 
  */
@@ -141,7 +163,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = WebSocket)
 	void Close();
 
-	bool Connect(const FString& uri, const TMap<FString, FString>& header);
+	bool Connect(const FString& uri, const TMap<FString, FString> &header, const FWebSocketConnectOptions &options);
 
 #if PLATFORM_UWP
 	Concurrency::task<void> ConnectAsync(Platform::String^ uriString);
