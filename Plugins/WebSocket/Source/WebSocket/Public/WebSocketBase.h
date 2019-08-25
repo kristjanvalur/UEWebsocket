@@ -120,6 +120,24 @@ struct SendQueueEntry
 };
 
 USTRUCT(BlueprintType)
+struct FWebSocketContextOptions
+{
+	GENERATED_USTRUCT_BODY()
+
+	// Ping pong interval in secods, or 0 to disable
+	UPROPERTY(Category = "Websocket", EditAnywhere, Blueprintreadwrite)
+	int32 iPingPongInterval = 0;
+
+	// Various timeout, including ping pong, or 0 for default
+	UPROPERTY(Category = "Websocket", EditAnywhere, Blueprintreadwrite)
+	int32 iTimeOutSecs = 0;
+
+	// Use the platform certifite bundle (if available) instead of the packaged one.
+	UPROPERTY(Category = "Websocket", EditAnywhere, Blueprintreadwrite)
+	bool bUsePlatformCertBundle = false;
+};
+
+USTRUCT(BlueprintType)
 struct FWebSocketConnectOptions
 {
 	GENERATED_USTRUCT_BODY()
@@ -130,11 +148,11 @@ struct FWebSocketConnectOptions
 
 	// Do not verify server hostname
 	UPROPERTY(Category = "Websocket", EditAnywhere, Blueprintreadwrite)
-		bool bSkipServerCertHostnameCheck = false;
+	bool bSkipServerCertHostnameCheck = false;
 
 	// Allow expired certificates
 	UPROPERTY(Category = "Websocket", EditAnywhere, Blueprintreadwrite)
-		bool bAllowExpired = false;
+	bool bAllowExpired = false;
 
 	// Pipeline http requests
 	UPROPERTY(Category = "Websocket", EditAnywhere, Blueprintreadwrite)

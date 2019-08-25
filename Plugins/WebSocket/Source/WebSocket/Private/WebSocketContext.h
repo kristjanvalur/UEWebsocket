@@ -55,7 +55,7 @@ public:
 
 	UWebSocketContext();
 
-	void CreateCtx();
+	void CreateCtx(const FWebSocketContextOptions &coptions);
 
 	virtual void BeginDestroy() override;
 

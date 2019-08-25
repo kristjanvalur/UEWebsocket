@@ -88,10 +88,10 @@ class WEBSOCKET_API UWebSocketBlueprintLibrary : public UBlueprintFunctionLibrar
 public:
 
 	UFUNCTION(BlueprintCallable, Category = "WebSocket")
-	static UWebSocketBase* Connect(const FString& url, const FWebSocketConnectOptions &options, bool& connectFail);
+	static UWebSocketBase* Connect(const FString& url, FWebSocketConnectOptions ConnectOptions, FWebSocketContextOptions ContextOptions, bool& connectFail);
 
 	UFUNCTION(BlueprintCallable, Category = "WebSocket")
-	static UWebSocketBase* ConnectWithHeader(const FString& url, const TArray<FWebSocketHeaderPair>& header, const FWebSocketConnectOptions &options, bool& connectFail);
+	static UWebSocketBase* ConnectWithHeader(const FString& url, const TArray<FWebSocketHeaderPair>& header, FWebSocketConnectOptions ConnectOptions, FWebSocketContextOptions ContextOptions, bool& connectFail);
 
 	UFUNCTION(BlueprintCallable, Category = "WebSocket")
 	static UObject* JsonToObject(const FString& data, UClass * StructDefinition, bool checkAll);

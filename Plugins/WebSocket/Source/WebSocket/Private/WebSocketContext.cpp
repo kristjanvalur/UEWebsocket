@@ -36,9 +36,9 @@
 #define MAX_PAYLOAD	64*1024
 
 #if PLATFORM_WINDOWS
-#define USE_WEBSOCKET_CA 0  /* windows can use the built in windows platform bundle */
+#define CAN_USE_PLATFORM_CA 1  /* windows can use the built in windows platform bundle */
 #else
-#define USE_WEBSOCKET_CA 1 /* rely on the bundle in WebSocketCA. TODO: Allow windows cert store */
+#define CAN_USE_PLATFORM_CA 0 /* rely on the bundle in WebSocketCA. TODO: Allow windows cert store */
 #endif
 
 
@@ -198,7 +198,7 @@ static void log_handler(int level, const char *line)
 	}
 }
 
-void UWebSocketContext::CreateCtx()
+void UWebSocketContext::CreateCtx(const FWebSocketContextOptions &options)
 {
 	int log_level = LLL_ERR | LLL_WARN | LLL_NOTICE;
 #if 0 &&	 defined UE_BUILD_DEBUG
@@ -216,44 +216,53 @@ void UWebSocketContext::CreateCtx()
 	info.protocols = protocols;
 	info.gid = -1;
 	info.uid = -1;
-	info.ws_ping_pong_interval = 0; // can set pingpong here.
+	info.ws_ping_pong_interval = options.iPingPongInterval; // can set pingpong here.
+	info.timeout_secs = options.iTimeOutSecs;
 	info.ssl_cert_filepath = NULL;
 	info.ssl_private_key_filepath = NULL;
 
 	info.extensions = exts;
 	info.options |= LWS_SERVER_OPTION_VALIDATE_UTF8;
 	info.options |= LWS_SERVER_OPTION_DO_SSL_GLOBAL_INIT;
-#if ! USE_WEBSOCKET_CA
-	info.options |= LWS_SERVER_OPTION_CREATE_VHOST_SSL_CTX;
+#if CAN_USE_PLATFORM_CA
+	bool use_platform_cert_bundle = options.bUsePlatformCertBundle;
 #else
-	FString PEMFilename = FPaths::ProjectSavedDir() / TEXT("ca-bundle.pem");
-	PEMFilename = IFileManager::Get().ConvertToAbsolutePathForExternalAppForRead(*PEMFilename);
-#if PLATFORM_ANDROID
-	extern FString GExternalFilePath;
-	PEMFilename = GExternalFilePath / TEXT("ca-bundle.pem");
+	bool use_platform_cert_bundle = false;
 #endif
-	mstrCAPath = TCHAR_TO_UTF8(*PEMFilename);
-	std::ofstream f(mstrCAPath.c_str() );
-	if (f.is_open())
-	{
-		FString strBase64CA(ANSI_TO_TCHAR(g_caArray) );
-		FString strCAContent;
-		FBase64::Decode(strBase64CA, strCAContent);
-		std::string strOriginCA = TCHAR_TO_UTF8(*strCAContent);
-		f.write(strOriginCA.c_str(), strOriginCA.size());
-		f.close();
-	}
-	else
-	{
-		UE_LOG(WebSocket, Warning, TEXT(" websocket: fail open file: '%s'"), *PEMFilename);
-		UKismetSystemLibrary::PrintString(this, TEXT(" websocket: fail open file:") + PEMFilename, true, true, FLinearColor(0.0, 0.66, 1.0), 1000);
-	}
-	
-	UE_LOG(WebSocket, Log, TEXT(" websocket: using generated PEM file: '%s'"), *PEMFilename);
-	//UKismetSystemLibrary::PrintString(this, TEXT("full dir:") + PEMFilename, true, true, FLinearColor(0.0, 0.66, 1.0), 1000);
 
-	info.client_ssl_ca_filepath = mstrCAPath.c_str();
+	if (use_platform_cert_bundle)
+	{
+		info.options |= LWS_SERVER_OPTION_CREATE_VHOST_SSL_CTX;
+	}
+	else {
+		FString PEMFilename = FPaths::ProjectSavedDir() / TEXT("ca-bundle.pem");
+		PEMFilename = IFileManager::Get().ConvertToAbsolutePathForExternalAppForRead(*PEMFilename);
+#if PLATFORM_ANDROID
+		extern FString GExternalFilePath;
+		PEMFilename = GExternalFilePath / TEXT("ca-bundle.pem");
 #endif
+		mstrCAPath = TCHAR_TO_UTF8(*PEMFilename);
+		std::ofstream f(mstrCAPath.c_str());
+		if (f.is_open())
+		{
+			FString strBase64CA(ANSI_TO_TCHAR(g_caArray));
+			FString strCAContent;
+			FBase64::Decode(strBase64CA, strCAContent);
+			std::string strOriginCA = TCHAR_TO_UTF8(*strCAContent);
+			f.write(strOriginCA.c_str(), strOriginCA.size());
+			f.close();
+		}
+		else
+		{
+			UE_LOG(WebSocket, Warning, TEXT(" websocket: fail open file: '%s'"), *PEMFilename);
+			UKismetSystemLibrary::PrintString(this, TEXT(" websocket: fail open file:") + PEMFilename, true, true, FLinearColor(0.0, 0.66, 1.0), 1000);
+		}
+
+		UE_LOG(WebSocket, Log, TEXT(" websocket: using generated PEM file: '%s'"), *PEMFilename);
+		//UKismetSystemLibrary::PrintString(this, TEXT("full dir:") + PEMFilename, true, true, FLinearColor(0.0, 0.66, 1.0), 1000);
+
+		info.client_ssl_ca_filepath = mstrCAPath.c_str();
+	}
 
 	mlwsContext = lws_create_context(&info);
 	if (mlwsContext == nullptr)
