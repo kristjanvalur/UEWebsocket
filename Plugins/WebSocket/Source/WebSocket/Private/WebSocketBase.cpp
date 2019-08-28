@@ -345,9 +345,8 @@ bool UWebSocketBase::Connect(const FString& uri, const TMap<FString, FString>& h
 	int ssl_options =
 		(options.bAllowSelfSigned ? LCCSCF_ALLOW_SELFSIGNED : 0) |
 		(options.bSkipServerCertHostnameCheck ? LCCSCF_SKIP_SERVER_CERT_HOSTNAME_CHECK : 0) |
-		(options.bAllowExpired ? LCCSCF_ALLOW_EXPIRED : 0) |
-		(options.bPipeline ? LCCSCF_PIPELINE : 0);
-
+		(options.bAllowExpired ? LCCSCF_ALLOW_EXPIRED : 0);
+		
 	int bUseSSL = false;
 
 	int iPos = uri.Find(TEXT(":"));

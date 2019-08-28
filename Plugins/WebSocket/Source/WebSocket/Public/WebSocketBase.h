@@ -144,7 +144,7 @@ struct FWebSocketConnectOptions
 
 	// Allow self signed certificates
 	UPROPERTY(Category = "Websocket", EditAnywhere, Blueprintreadwrite)
-	bool bAllowSelfSigned = false;
+	bool bAllowSelfSigned = true;
 
 	// Do not verify server hostname
 	UPROPERTY(Category = "Websocket", EditAnywhere, Blueprintreadwrite)
@@ -153,10 +153,6 @@ struct FWebSocketConnectOptions
 	// Allow expired certificates
 	UPROPERTY(Category = "Websocket", EditAnywhere, Blueprintreadwrite)
 	bool bAllowExpired = false;
-
-	// Pipeline http requests
-	UPROPERTY(Category = "Websocket", EditAnywhere, Blueprintreadwrite)
-	bool bPipeline = false;
 };
 
 /**
