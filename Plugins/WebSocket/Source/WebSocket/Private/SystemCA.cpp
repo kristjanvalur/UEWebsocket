@@ -1,7 +1,7 @@
 #include "SystemCA.h"
 #include "WebSocket.h"
 
-#ifdef PLATFORM_WINDOWS
+#if PLATFORM_WINDOWS
 
 #include <stdio.h>
 #include <iostream>

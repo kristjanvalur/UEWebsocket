@@ -166,7 +166,9 @@ int UWebSocketContext::callback_echo(struct lws *wsi, enum lws_callback_reasons 
 
 	case LWS_CALLBACK_OPENSSL_LOAD_EXTRA_CLIENT_VERIFY_CERTS:
 	{
+#if CAN_USE_PLATFORM_CA
 		add_system_ca_bundle(user);  // user is SSL_CTX*
+#endif
 		break;
 	}
 
