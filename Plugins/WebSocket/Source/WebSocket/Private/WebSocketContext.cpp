@@ -44,6 +44,13 @@
 
 extern TSharedPtr<UWebSocketContext> s_websocketCtx;
 
+// the global log level
+#if 1 || ! defined UE_BUILD_DEBUG
+static int log_level = LLL_ERR | LLL_WARN | LLL_NOTICE;
+#else
+static int log_level = LLL_ERR | LLL_WARN | LLL_NOTICE | LLL_INFO | LLL_CLIENT | LLL_DEBUG;
+#endif
+
 #if PLATFORM_UWP
 #elif PLATFORM_HTML5
 #else
@@ -201,10 +208,7 @@ static void log_handler(int level, const char *line)
 
 void UWebSocketContext::CreateCtx(const FWebSocketContextOptions &options)
 {
-	int log_level = LLL_ERR | LLL_WARN | LLL_NOTICE;
-#if 0 &&	 defined UE_BUILD_DEBUG
-	log_level |= LLL_INFO | LLL_CLIENT | LLL_DEBUG;
-#endif
+
 	lws_set_log_level(log_level, log_handler);
 
 #if PLATFORM_UWP
@@ -302,6 +306,26 @@ bool UWebSocketContext::IsTickable() const
 TStatId UWebSocketContext::GetStatId() const
 {
 	return TStatId();
+}
+
+void UWebSocketContext::SetLogLevel(int32 level)
+{
+	log_level = 0;
+	if (level & (1 << (int)(EWebSocketLogLevel::ERR))) log_level |= LLL_ERR;
+	if (level & (1 << (int)(EWebSocketLogLevel::WARN))) log_level |= LLL_WARN;
+	if (level & (1 << (int)(EWebSocketLogLevel::NOTICE))) log_level |= LLL_NOTICE;
+	if (level & (1 << (int)(EWebSocketLogLevel::INFO))) log_level |= LLL_INFO;
+	if (level & (1 << (int)(EWebSocketLogLevel::DEBUG))) log_level |= LLL_DEBUG;
+
+	if (level & (1 << (int)(EWebSocketLogLevel::PARSER))) log_level |= LLL_PARSER;
+	if (level & (1 << (int)(EWebSocketLogLevel::HEADER))) log_level |= LLL_HEADER;
+	if (level & (1 << (int)(EWebSocketLogLevel::EXT))) log_level |= LLL_EXT;
+	if (level & (1 << (int)(EWebSocketLogLevel::CLIENT))) log_level |= LLL_CLIENT;
+	if (level & (1 << (int)(EWebSocketLogLevel::LATENCY))) log_level |= LLL_LATENCY;
+	if (level & (1 << (int)(EWebSocketLogLevel::USER))) log_level |= LLL_USER;
+	if (level & (1 << (int)(EWebSocketLogLevel::THREAD))) log_level |= LLL_THREAD;
+
+	lws_set_log_level(log_level, log_handler);
 }
 
 UWebSocketBase* UWebSocketContext::Connect(const FString& uri, const TMap<FString, FString>& header, const FWebSocketConnectOptions &options, bool& connectFail)

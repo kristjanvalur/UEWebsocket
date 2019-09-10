@@ -95,6 +95,11 @@ UWebSocketBase* UWebSocketBlueprintLibrary::ConnectWithHeader(const FString& url
 	return s_websocketCtx->Connect(url, headerMap, ConnectOptions, connectFail);
 }
 
+void UWebSocketBlueprintLibrary::SetLogLevel(int32 level)
+{
+	UWebSocketContext::SetLogLevel(level);
+}
+
 bool UWebSocketBlueprintLibrary::GetJsonIntField(const FString& data, const FString& key, int& iValue)
 {
 	FString tmpData = data;

@@ -78,6 +78,8 @@ struct FWebSocketHeaderPair
 };
 
 
+
+
 /**
  * 
  */
@@ -102,6 +104,10 @@ public:
 	// Connect using the static web socket, creating one if it doesn't exists
 	UFUNCTION(BlueprintCallable, Category = "WebSocket")
 	static UWebSocketBase* ConnectWithHeader(const FString& url, const TArray<FWebSocketHeaderPair>& header, FWebSocketConnectOptions ConnectOptions, bool& connectFail);
+
+	// Set the log level of the libwebsockets library
+	UFUNCTION(BlueprintCallable, Category = "WebSocket")
+	static void SetLogLevel(UPARAM(meta = (Bitmask, BitmaskEnum = EWebSocketLogLevel)) int32 level);
 
 	UFUNCTION(BlueprintCallable, Category = "WebSocket")
 	static UObject* JsonToObject(const FString& data, UClass * StructDefinition, bool checkAll);

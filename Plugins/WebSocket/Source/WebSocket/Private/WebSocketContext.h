@@ -64,6 +64,7 @@ public:
 	virtual bool IsTickable() const override;
 	virtual TStatId GetStatId() const override;
 
+	static void SetLogLevel(int32 level);
 	UWebSocketBase* Connect(const FString& uri, bool& connectFail);
 	UWebSocketBase* Connect(const FString& uri, const TMap<FString, FString>& header, const FWebSocketConnectOptions &options, bool& connectFail);
 #if PLATFORM_UWP
