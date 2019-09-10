@@ -320,7 +320,7 @@ UWebSocketBase* UWebSocketContext::Connect(const FString& uri, const TMap<FStrin
 #if PLATFORM_UWP
 #elif PLATFORM_HTML5
 #else
-	pNewSocketBase->mlwsContext = mlwsContext;
+	pNewSocketBase->mWebSocketContext = this;
 #endif
 	connectFail = !(pNewSocketBase->Connect(uri, header, options) );
 

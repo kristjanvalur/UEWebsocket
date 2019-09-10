@@ -162,6 +162,8 @@ UCLASS(Blueprintable, BlueprintType)
 class WEBSOCKET_API UWebSocketBase:public UObject
 {
 	GENERATED_BODY()
+
+	bool IsValid();
 public:
 
 	UWebSocketBase();
@@ -216,7 +218,13 @@ public:
 	bool mIsError;
 	FHtml5SocketHelper mHtml5SocketHelper;
 #else
-	struct lws_context* mlwsContext;
+	// we maintain a weak pointer to the UWebSocketContext, since it may
+	// go away.  if there is no lws context, then the lws itself is invalid.
+	// two convenience functions help us with this.
+	struct lws_context *GetLWSContext() const;
+	struct lws *GetLWS() const;
+
+	TWeakObjectPtr<class UWebSocketContext> mWebSocketContext;
 	struct lws* mlws;
 	bool closing;
 #endif

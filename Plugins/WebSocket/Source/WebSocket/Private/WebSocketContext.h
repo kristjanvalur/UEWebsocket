@@ -70,6 +70,7 @@ public:
 #elif PLATFORM_HTML5
 #else
 	static int callback_echo(struct lws *wsi, enum lws_callback_reasons reason, void *user, void *in, size_t len);
+	struct lws_context *GetContext() { return mlwsContext;}
 #endif
 	
 private:

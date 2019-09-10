@@ -23,6 +23,7 @@
 #include <iostream>
 #include <vector>
 #include "WebSocketBase.h"
+#include "WebSocketContext.h"
 
 #if PLATFORM_UWP
 #elif PLATFORM_HTML5
@@ -170,11 +171,36 @@ UWebSocketBase::UWebSocketBase()
 	mIsError = false;
 	
 #else
-	mlwsContext = nullptr;
 	mlws = nullptr;
 	closing = false;
 #endif
 }
+
+
+#if PLATFORM_UWP
+#elif PLATFORM_HTML5
+#else
+// accessor helpers to get the lws pointer if the lws context is alive.
+struct lws_context * UWebSocketBase::GetLWSContext() const
+{
+	UWebSocketContext *ptr = mWebSocketContext.Get();
+	if (ptr)
+	{
+		return ptr->GetContext();
+	}
+	return nullptr;
+}
+
+struct lws * UWebSocketBase::GetLWS() const
+{
+	if (mlws && GetLWSContext())
+	{
+		return mlws;
+	}
+	return nullptr;
+}
+
+#endif
 
 
 void UWebSocketBase::BeginDestroy()
@@ -193,9 +219,9 @@ void UWebSocketBase::BeginDestroy()
 #elif PLATFORM_HTML5
 	mHtml5SocketHelper.UnBind();
 #else
-	if (mlws != nullptr)
+	auto tmp = GetLWS();
+	if (tmp)
 	{
-		auto tmp = mlws;
 		mlws = nullptr;
 		lws_set_wsi_user(tmp, NULL);
 		lws_callback_on_writable(tmp);
@@ -337,7 +363,9 @@ bool UWebSocketBase::Connect(const FString& uri, const TMap<FString, FString>& h
 
 	return true;
 #else
-	if (mlwsContext == nullptr)
+
+	struct lws_context* lwsContext = mWebSocketContext.Get() ? mWebSocketContext.Get()->GetContext() : nullptr;
+	if (!lwsContext)
 	{
 		return false;
 	}
@@ -405,7 +433,7 @@ bool UWebSocketBase::Connect(const FString& uri, const TMap<FString, FString>& h
 	std::string stdPath = TCHAR_TO_UTF8(*strPath);
 	std::string stdHost = TCHAR_TO_UTF8(*strHost);;
 
-	connectInfo.context = mlwsContext;
+	connectInfo.context = lwsContext;
 	connectInfo.address = stdAddress.c_str();
 	connectInfo.port = iPort;
 	connectInfo.ssl_connection = ssl_options | (bUseSSL ? LCCSCF_USE_SSL : 0);
@@ -441,11 +469,12 @@ void UWebSocketBase::SendText(const FString& data)
 	SocketSend(mWebSocketRef, strData.c_str(), (int)strData.size() );
 #else
 
-	if (mlws != nullptr)
+	auto lws = GetLWS();
+	if (lws)
 	{
 		FTCHARToUTF8 utf8(*data);
 		mSendQueue.AddTail(SendQueueEntry(false, (const unsigned char*)utf8.Get(), utf8.Length()));
-		lws_callback_on_writable(mlws);
+		lws_callback_on_writable(lws);
 	}
 	else
 	{
@@ -462,10 +491,11 @@ void UWebSocketBase::SendBinary(const TArray<uint8>& data)
 	
 #else
 
-	if (mlws != nullptr)
+	auto lws = GetLWS();
+	if (lws)
 	{
 		mSendQueue.AddTail(SendQueueEntry(true, data.GetData(), data.Num()));
-		lws_callback_on_writable(mlws);
+		lws_callback_on_writable(lws);
 	}
 	else
 	{
@@ -551,10 +581,11 @@ void UWebSocketBase::Close()
 	mWebSocketRef = -1;
 	OnClosed.Broadcast();
 #else
-	if (mlws != nullptr)
+	auto lws = GetLWS();
+	if (lws)
 	{
 		closing = true;
-		lws_callback_on_writable(mlws);
+		lws_callback_on_writable(lws);
 	}
 #endif
 }
@@ -564,11 +595,12 @@ void UWebSocketBase::Cleanlws()
 #if PLATFORM_UWP
 #elif PLATFORM_HTML5
 #else
-	if (mlws != nullptr)
+	auto lws = GetLWS();
+	if (lws)
 	{
 		lws_set_wsi_user(mlws, NULL);
-		mlws = nullptr;
 	}
+	mlws = nullptr;
 #endif
 }
 
