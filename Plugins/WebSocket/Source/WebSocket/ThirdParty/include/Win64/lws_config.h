@@ -33,6 +33,7 @@
 
 /* #undef LWS_WITH_PLUGINS */
 /* #undef LWS_WITH_NO_LOGS */
+#define LWS_WITH_MORE_LOGS
 
 /* The Libwebsocket version */
 #define LWS_LIBRARY_VERSION "3.1.0"
@@ -44,7 +45,7 @@
 #define LWS_LIBRARY_VERSION_NUMBER (LWS_LIBRARY_VERSION_MAJOR*1000000)+(LWS_LIBRARY_VERSION_MINOR*1000)+LWS_LIBRARY_VERSION_PATCH
 
 /* The current git commit hash that we're building from */
-/* #undef LWS_BUILD_HASH */
+#define LWS_BUILD_HASH "v3.1.0-99-g04ca7d09"
 
 /* Build with OpenSSL support ... alias of LWS_WITH_TLS for compatibility*/
 #define LWS_OPENSSL_SUPPORT

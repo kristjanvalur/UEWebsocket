@@ -37,7 +37,9 @@ if "%RUN_CMAKE%"=="1" (
 	del /S /Q *.*
 
 	cmake -G "Visual Studio 15 Win64" -DCMAKE_INSTALL_PREFIX=%INST% ^
+	-DLWS_WITH_MORE_LOGS=ON ^
 	..
+	rem add -DCMAKE_BUILD_TYPE=DEBUG to get full logging
 	rem specifying the UE4 libraries does not work.  Just use the installed 1.1.1 version
 	rem -DLWS_OPENSSL_INCLUDE_DIRS=%UE422%\Engine\Source\ThirdParty\OpenSSL\1.1.1\Include\Win64\VS2015 ^
 	rem -DLWS_OPENSSL_LIBRARIES=%UE422%\Engine\Source\ThirdParty\OpenSSL\1.1.1\lib\Win64\VS2015\Release\libcrypto.lib;%UE422%\Engine\Source\ThirdParty\OpenSSL\1.1.1\lib\Win64\VS2015\Release\libssl.lib ^
