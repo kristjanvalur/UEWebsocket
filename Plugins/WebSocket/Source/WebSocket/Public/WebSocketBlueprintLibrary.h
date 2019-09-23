@@ -78,6 +78,48 @@ struct FWebSocketHeaderPair
 };
 
 
+// Enum for the log level setting
+UENUM(BlueprintType, meta = (Bitflags))		//"BlueprintType" is essential to include
+enum class EWebSocketLogLevel : uint8
+{
+	ERR,
+	WARN,
+	NOTICE,
+	INFO,
+	DEBUG,
+
+	PARSER,
+	HEADER,
+	EXT,
+	CLIENT,
+	LATENCY,
+	USER,
+	THREAD,
+};
+ENUM_CLASS_FLAGS(EWebSocketLogLevel)
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FWebSocketLog, int, level, const FString&, message);
+
+// A singleton class representing the libwebsockets library
+UCLASS(BlueprintType, Blueprintable)
+class UWebSocketLib : public UObject
+{
+	GENERATED_BODY()
+public:
+	static UWebSocketLib *Get();
+	static void DoLog(int level, const FString& msg);
+
+	// Set the log level of the libwebsockets library
+	UFUNCTION(BlueprintCallable, Category = "WebSocket")
+	static void SetLogLevel(UPARAM(meta = (Bitmask, BitmaskEnum = EWebSocketLogLevel)) int32 level);
+
+	/* delegate to receive libwebsockets log messages */
+	UPROPERTY(BlueprintAssignable, Category = "WebSocket")
+	FWebSocketLog OnLog;
+
+private:
+	static TSharedPtr<UWebSocketLib> websocketLib;
+};
 
 
 /**
@@ -105,10 +147,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "WebSocket")
 	static UWebSocketBase* ConnectWithHeader(const FString& url, const TArray<FWebSocketHeaderPair>& header, FWebSocketConnectOptions ConnectOptions, bool& connectFail);
 
-	// Set the log level of the libwebsockets library
-	UFUNCTION(BlueprintCallable, Category = "WebSocket")
-	static void SetLogLevel(UPARAM(meta = (Bitmask, BitmaskEnum = EWebSocketLogLevel)) int32 level);
-
 	UFUNCTION(BlueprintCallable, Category = "WebSocket")
 	static UObject* JsonToObject(const FString& data, UClass * StructDefinition, bool checkAll);
 	
@@ -117,6 +155,10 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "WebSocket")
 	static bool ObjectToJson(UObject* Object, FString& data);
+
+	// Return the library singleton object
+	UFUNCTION(BlueprintCallable, Category = "WebSocket")
+	static UWebSocketLib *GetWebSocketLib();
 
 	static bool JsonValueToUProperty(TSharedPtr<FJsonValue> JsonValue, UProperty* Property, void* OutValue, int64 CheckFlags, int64 SkipFlags);
 	static bool ConvertScalarJsonValueToUProperty(TSharedPtr<FJsonValue> JsonValue, UProperty* Property, void* OutValue, int64 CheckFlags, int64 SkipFlags);

@@ -119,26 +119,6 @@ struct SendQueueEntry
 	size_t datalen;
 };
 
-// Enum for the log level setting
-UENUM(BlueprintType, meta = (Bitflags))		//"BlueprintType" is essential to include
-enum class EWebSocketLogLevel : uint8
-{
-	ERR,
-	WARN,
-	NOTICE,
-	INFO,
-	DEBUG,
-
-	PARSER,
-	HEADER,
-	EXT,
-	CLIENT,
-	LATENCY,
-	USER,
-	THREAD,
-};
-ENUM_CLASS_FLAGS(EWebSocketLogLevel)
-
 USTRUCT(BlueprintType)
 struct FWebSocketContextOptions
 {

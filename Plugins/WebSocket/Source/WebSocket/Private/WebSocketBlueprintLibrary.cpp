@@ -49,6 +49,33 @@ static bool GetTextFromObject(const TSharedRef<FJsonObject>& Obj, FText& TextOut
 	return false;
 }
 
+UWebSocketLib* UWebSocketLib::Get()
+{
+	if (websocketLib.Get() == nullptr)
+	{
+		websocketLib = MakeShareable(NewObject<UWebSocketLib>());
+		websocketLib->AddToRoot();
+	}
+	return websocketLib.Get();
+}
+
+
+void UWebSocketLib::SetLogLevel(int32 level)
+{
+	UWebSocketContext::SetLogLevel(level);
+}
+
+void UWebSocketLib::DoLog(int level, const FString& msg)
+{
+	if (websocketLib.Get() != nullptr)
+	{
+		websocketLib.Get()->OnLog.Broadcast(level, msg);
+	}
+}
+
+TSharedPtr<UWebSocketLib> UWebSocketLib::websocketLib;
+
+
 void UWebSocketBlueprintLibrary::CreateStaticContext(FWebSocketContextOptions ContextOptions)
 {
 	DestroyStaticContext();
@@ -58,6 +85,11 @@ void UWebSocketBlueprintLibrary::CreateStaticContext(FWebSocketContextOptions Co
 		s_websocketCtx->CreateCtx(ContextOptions);
 		s_websocketCtx->AddToRoot();
 	}
+}
+
+UWebSocketLib *UWebSocketBlueprintLibrary::GetWebSocketLib()
+{
+	return UWebSocketLib::Get();
 }
 
 void UWebSocketBlueprintLibrary::DestroyStaticContext()
@@ -93,11 +125,6 @@ UWebSocketBase* UWebSocketBlueprintLibrary::ConnectWithHeader(const FString& url
 	}
 
 	return s_websocketCtx->Connect(url, headerMap, ConnectOptions, connectFail);
-}
-
-void UWebSocketBlueprintLibrary::SetLogLevel(int32 level)
-{
-	UWebSocketContext::SetLogLevel(level);
 }
 
 bool UWebSocketBlueprintLibrary::GetJsonIntField(const FString& data, const FString& key, int& iValue)

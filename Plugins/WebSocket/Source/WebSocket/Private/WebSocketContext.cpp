@@ -21,6 +21,7 @@
 
 
 #include "WebSocket.h"
+#include "WebSocketBlueprintLibrary.h"
 #include "WebSocketContext.h"
 #include "UObjectGlobals.h"
 #include "WebSocketBase.h"
@@ -195,6 +196,7 @@ static void log_handler(int level, const char *line)
 {
 	FString str(line);
 	str.TrimEndInline();
+	UWebSocketLib::DoLog(level, str);
 	if (level == LLL_ERR)
 	{
 		UE_LOG(LibWebsockets, Error, TEXT("lws %d: %s"), level, *str);
