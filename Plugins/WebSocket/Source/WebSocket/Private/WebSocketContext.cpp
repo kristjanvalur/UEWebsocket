@@ -43,7 +43,7 @@
 #endif
 
 
-extern TSharedPtr<UWebSocketContext> s_websocketCtx;
+extern TWeakObjectPtr<UWebSocketContext> s_websocketCtx;
 
 // the global log level
 #if 1 || ! defined UE_BUILD_DEBUG

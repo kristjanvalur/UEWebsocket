@@ -118,7 +118,7 @@ public:
 	FWebSocketLog OnLog;
 
 private:
-	static TSharedPtr<UWebSocketLib> websocketLib;
+	static TWeakObjectPtr<UWebSocketLib> websocketLib;
 };
 
 

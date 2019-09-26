@@ -26,7 +26,7 @@
 
 
 
-TSharedPtr<UWebSocketContext> s_websocketCtx;
+TWeakObjectPtr<UWebSocketContext> s_websocketCtx;
 
 static bool GetTextFromObject(const TSharedRef<FJsonObject>& Obj, FText& TextOut)
 {
@@ -53,7 +53,7 @@ UWebSocketLib* UWebSocketLib::Get()
 {
 	if (websocketLib.Get() == nullptr)
 	{
-		websocketLib = MakeShareable(NewObject<UWebSocketLib>());
+		websocketLib = NewObject<UWebSocketLib>();
 		websocketLib->AddToRoot();
 	}
 	return websocketLib.Get();
@@ -73,7 +73,7 @@ void UWebSocketLib::DoLog(int level, const FString& msg)
 	}
 }
 
-TSharedPtr<UWebSocketLib> UWebSocketLib::websocketLib;
+TWeakObjectPtr<UWebSocketLib> UWebSocketLib::websocketLib;
 
 
 void UWebSocketBlueprintLibrary::CreateStaticContext(FWebSocketContextOptions ContextOptions)
@@ -81,7 +81,7 @@ void UWebSocketBlueprintLibrary::CreateStaticContext(FWebSocketContextOptions Co
 	DestroyStaticContext();
 	if (s_websocketCtx.Get() == nullptr)
 	{
-		s_websocketCtx = MakeShareable(NewObject<UWebSocketContext>());
+		s_websocketCtx = NewObject<UWebSocketContext>();
 		s_websocketCtx->CreateCtx(ContextOptions);
 		s_websocketCtx->AddToRoot();
 	}
