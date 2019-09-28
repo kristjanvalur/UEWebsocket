@@ -65,6 +65,11 @@ public:
 	virtual TStatId GetStatId() const override;
 
 	static void SetLogLevel(int32 level);
+	
+	//Create an unconnected websocket object
+	UFUNCTION(BlueprintCallable, Category = "WebSocket")
+	UWebSocketBase* CreateSocket();
+
 	UWebSocketBase* Connect(const FString& uri, bool& connectFail);
 	UWebSocketBase* Connect(const FString& uri, const TMap<FString, FString>& header, const FWebSocketConnectOptions &options, bool& connectFail);
 #if PLATFORM_UWP

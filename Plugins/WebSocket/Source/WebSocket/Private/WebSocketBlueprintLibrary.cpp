@@ -102,6 +102,15 @@ void UWebSocketBlueprintLibrary::DestroyStaticContext()
 	}
 }
 
+UWebSocketBase* UWebSocketBlueprintLibrary::CreateSocket()
+{
+	if (s_websocketCtx.Get() == nullptr)
+	{
+		CreateStaticContext(FWebSocketContextOptions());
+	}
+	return s_websocketCtx->CreateSocket();
+}
+
 UWebSocketBase* UWebSocketBlueprintLibrary::Connect(const FString& url, FWebSocketConnectOptions ConnectOptions, bool& connectFail)
 {
 	if (s_websocketCtx.Get() == nullptr)

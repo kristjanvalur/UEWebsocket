@@ -330,9 +330,14 @@ Concurrency::task<void> UWebSocketBase::SendAsync(Platform::String^ message)
 
 #endif
 
-bool UWebSocketBase::Connect(const FString& uri, const TMap<FString, FString>& header, const FWebSocketConnectOptions& options)
+bool UWebSocketBase::IsConnected()
 {
-	if (uri.IsEmpty())
+	return GetLWS() != nullptr;
+}
+
+bool UWebSocketBase::Connect(const FString& uri, const TMap<FString, FString>& headers, const FWebSocketConnectOptions options)
+{
+	if (uri.IsEmpty() || IsConnected())
 	{
 		return false;
 	}
@@ -364,7 +369,7 @@ bool UWebSocketBase::Connect(const FString& uri, const TMap<FString, FString>& h
 	return true;
 #else
 
-	struct lws_context* lwsContext = mWebSocketContext.Get() ? mWebSocketContext.Get()->GetContext() : nullptr;
+	struct lws_context* lwsContext = GetLWSContext();
 	if (!lwsContext)
 	{
 		return false;
@@ -451,7 +456,7 @@ bool UWebSocketBase::Connect(const FString& uri, const TMap<FString, FString>& h
 		return false;
 	}
 
-	mHeaderMap = header;
+	mHeaderMap = headers;
 
 	return true;
 #endif
@@ -605,6 +610,7 @@ void UWebSocketBase::Cleanlws()
 		lws_set_wsi_user(mlws, NULL);
 	}
 	mlws = nullptr;
+	closing = false;
 #endif
 }
 

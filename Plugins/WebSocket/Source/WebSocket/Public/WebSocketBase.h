@@ -179,7 +179,13 @@ public:
 	UFUNCTION(BlueprintCallable, Category = WebSocket)
 	void Close();
 
-	bool Connect(const FString& uri, const TMap<FString, FString> &header, const FWebSocketConnectOptions &options);
+	// Sees if this socket is connected
+	UFUNCTION(BlueprintPure, Category = WebSocket)
+	bool IsConnected();
+
+	// Connect this socket if unconnected
+	UFUNCTION(BlueprintCallable, Category = WebSocket)
+	bool Connect(const FString& url, const TMap<FString, FString> &headers, const FWebSocketConnectOptions options);
 
 #if PLATFORM_UWP
 	Concurrency::task<void> ConnectAsync(Platform::String^ uriString);

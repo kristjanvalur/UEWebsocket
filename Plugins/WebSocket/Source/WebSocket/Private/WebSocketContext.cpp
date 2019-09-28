@@ -332,7 +332,7 @@ void UWebSocketContext::SetLogLevel(int32 level)
 	lws_set_log_level(log_level, log_handler);
 }
 
-UWebSocketBase* UWebSocketContext::Connect(const FString& uri, const TMap<FString, FString>& header, const FWebSocketConnectOptions &options, bool& connectFail)
+UWebSocketBase* UWebSocketContext::CreateSocket()
 {
 #if PLATFORM_UWP
 #elif PLATFORM_HTML5
@@ -350,6 +350,18 @@ UWebSocketBase* UWebSocketContext::Connect(const FString& uri, const TMap<FStrin
 #else
 	pNewSocketBase->mWebSocketContext = this;
 #endif
+	return pNewSocketBase;
+}
+
+UWebSocketBase* UWebSocketContext::Connect(const FString& uri, const TMap<FString, FString>& header, const FWebSocketConnectOptions &options, bool& connectFail)
+{
+
+	UWebSocketBase* pNewSocketBase = CreateSocket();
+	if (pNewSocketBase == nullptr)
+	{
+		return nullptr;
+	}
+
 	connectFail = !(pNewSocketBase->Connect(uri, header, options) );
 
 	return pNewSocketBase;

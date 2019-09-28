@@ -139,6 +139,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "WebSocket")
 	static void DestroyStaticContext();
 
+	// Create an unconnected sockets
+	UFUNCTION(BlueprintCallable, Category = "WebSocket")
+	static UWebSocketBase* CreateSocket();
+
 	// Connect using the static web socket, creating one if it doesn't exists
 	UFUNCTION(BlueprintCallable, Category = "WebSocket")
 	static UWebSocketBase* Connect(const FString& url, FWebSocketConnectOptions ConnectOptions, bool& connectFail);
