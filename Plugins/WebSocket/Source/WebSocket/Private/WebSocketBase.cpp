@@ -447,6 +447,8 @@ bool UWebSocketBase::Connect(const FString& uri, const TMap<FString, FString>& h
 	connectInfo.origin = stdHost.c_str();
 	connectInfo.ietf_version_or_minus_one = -1;
 	connectInfo.userdata = this;
+	// allow lws to temporarily set mlws, so that callbacks work during the connect phase.
+	connectInfo.pwsi = &mlws;
 
 	mlws = lws_client_connect_via_info(&connectInfo);
 	//mlws = lws_client_connect_extended(mlwsContext, TCHAR_TO_UTF8(*strAddress), iPort, iUseSSL, TCHAR_TO_UTF8(*strPath), TCHAR_TO_UTF8(*strHost), TCHAR_TO_UTF8(*strHost), NULL, -1, (void*)this);
