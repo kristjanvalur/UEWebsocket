@@ -555,6 +555,10 @@ bool UWebSocketBase::ProcessHeader(unsigned char** p, unsigned char* end)
 	{
 		std::string strKey = TCHAR_TO_UTF8(*(it.Key) );
 		std::string strValue = TCHAR_TO_UTF8(*(it.Value));
+		if (strKey.length() == 0 || strValue.length() == 0)
+		{
+			continue;
+		}
 
 		strKey += ":";
 		if (lws_add_http_header_by_name(mlws, (const unsigned char*)strKey.c_str(), (const unsigned char*)strValue.c_str(), (int)strValue.size(), p, end))
