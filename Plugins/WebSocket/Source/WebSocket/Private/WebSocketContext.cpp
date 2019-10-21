@@ -91,6 +91,11 @@ void UWebSocketContext::BeginDestroy()
 	s_websocketCtx.Reset();
 }
 
+UWebSocketContext::~UWebSocketContext()
+{
+	UE_LOG(LogInit, Log, TEXT("release UWebSocketContext"));
+}
+
 #if PLATFORM_UWP
 #elif PLATFORM_HTML5
 #else

@@ -109,11 +109,11 @@ public class WebSocket : ModuleRules
                     PublicAdditionalLibraries.Add(Lib);
                 }
             }
-            else if(EngineMinorVersion == "22")
+            else if(EngineMinorVersion == "22" || EngineMinorVersion == "23")
             {
 
                 PublicAdditionalLibraries.Add("websockets_static422.lib");
-                // for 4.22
+                // for 4.22 and 4.23
                 if (false) // disabled for 1939 games
                 {
                 if (Target.Type == TargetType.Editor)
@@ -156,7 +156,7 @@ public class WebSocket : ModuleRules
                     PublicAdditionalLibraries.Add(Lib);
                 }
             }
-            else if(EngineMinorVersion == "22")
+            else if(EngineMinorVersion == "22"|| EngineMinorVersion == "23")
             {
                 string[] StaticLibrariesX32 = new string[] {
                     "websockets_static422.lib",
