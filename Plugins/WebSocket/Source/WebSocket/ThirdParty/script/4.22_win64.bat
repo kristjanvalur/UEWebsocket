@@ -47,10 +47,11 @@ if "%RUN_CMAKE%"=="1" (
 
 rem run visual studio
 if "%RUN_BUILD%"=="1" (
-	msbuild.exe /property:Configuration=%CONFIGURATION% /target:websockets libwebsockets.sln 
+	msbuild.exe /property:Configuration=%CONFIGURATION% /target:Clean,websockets libwebsockets.sln 
 )
 
 if "%RUN_INSTALL%"=="1" (
+	del /S /Q "%INST%"
 	rem msbuild.exe /property:Configuration=%CONFIGURATION% /target:install libwebsockets.sln 
 	msbuild.exe /property:Configuration=%CONFIGURATION% install.vcxproj 
 )

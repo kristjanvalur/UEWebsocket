@@ -171,7 +171,15 @@
  * doubly linked-list
  */
 
-struct lws_dll { /* abstract */
+#if defined (LWS_WITH_DEPRECATED_LWS_DLL)
+
+/*
+ * This is going away in v4.1.  You can set the cmake option above to keep it
+ * around temporarily.  Migrate your stuff to the more capable and robust
+ * lws_dll2 below
+ */
+
+struct lws_dll {
 	struct lws_dll *prev;
 	struct lws_dll *next;
 };
@@ -181,30 +189,124 @@ struct lws_dll { /* abstract */
  * lws_container_of() helper to recover the start of the containing struct
  */
 
-LWS_VISIBLE LWS_EXTERN void
-lws_dll_add_front(struct lws_dll *d, struct lws_dll *phead);
+#define lws_dll_add_front lws_dll_add_head
 
 LWS_VISIBLE LWS_EXTERN void
-lws_dll_remove(struct lws_dll *d);
+lws_dll_add_head(struct lws_dll *d, struct lws_dll *phead);
 
-struct lws_dll_lws { /* typed as struct lws * */
-	struct lws_dll_lws *prev;
-	struct lws_dll_lws *next;
-};
+LWS_VISIBLE LWS_EXTERN void
+lws_dll_add_tail(struct lws_dll *d, struct lws_dll *phead);
 
-#define lws_dll_is_null(___dll) (!(___dll)->prev && !(___dll)->next)
+LWS_VISIBLE LWS_EXTERN void
+lws_dll_insert(struct lws_dll *d, struct lws_dll *target,
+	       struct lws_dll *phead, int before);
 
-static LWS_INLINE void
-lws_dll_lws_add_front(struct lws_dll_lws *_a, struct lws_dll_lws *_head)
-{
-	lws_dll_add_front((struct lws_dll *)_a, (struct lws_dll *)_head);
-}
+static LWS_INLINE struct lws_dll *
+lws_dll_get_head(struct lws_dll *phead) { return phead->next; }
 
-static LWS_INLINE void
-lws_dll_lws_remove(struct lws_dll_lws *_a)
-{
-	lws_dll_remove((struct lws_dll *)_a);
-}
+static LWS_INLINE struct lws_dll *
+lws_dll_get_tail(struct lws_dll *phead) { return phead->prev; }
+
+/*
+ * caution, this doesn't track the tail in the head struct.  Use
+ * lws_dll_remove_track_tail() instead of this if you want tail tracking.  Using
+ * this means you can't use lws_dll_add_tail() amd
+ */
+LWS_VISIBLE LWS_EXTERN void
+lws_dll_remove(struct lws_dll *d) LWS_WARN_DEPRECATED;
+
+LWS_VISIBLE LWS_EXTERN void
+lws_dll_remove_track_tail(struct lws_dll *d, struct lws_dll *phead);
+
+/* another way to do lws_start_foreach_dll_safe() on a list via a cb */
+
+LWS_VISIBLE LWS_EXTERN int
+lws_dll_foreach_safe(struct lws_dll *phead, void *user,
+		     int (*cb)(struct lws_dll *d, void *user));
+
+#define lws_dll_is_detached(___dll, __head) \
+	(!(___dll)->prev && !(___dll)->next && (__head)->prev != (___dll))
+
+#endif
+
+/*
+ * lws_dll2_owner / lws_dll2 : more capable version of lws_dll.  Differences:
+ *
+ *  - there's an explicit lws_dll2_owner struct which holds head, tail and
+ *    count of members.
+ *
+ *  - list members all hold a pointer to their owner.  So user code does not
+ *    have to track anything about exactly what lws_dll2_owner list the object
+ *    is a member of.
+ *
+ *  - you can use lws_dll unless you want the member count or the ability to
+ *    not track exactly which list it's on.
+ *
+ *  - layout is compatible with lws_dll (but lws_dll apis will not update the
+ *    new stuff)
+ */
+
+
+struct lws_dll2;
+struct lws_dll2_owner;
+
+typedef struct lws_dll2 {
+	struct lws_dll2		*prev;
+	struct lws_dll2		*next;
+	struct lws_dll2_owner	*owner;
+} lws_dll2_t;
+
+typedef struct lws_dll2_owner {
+	struct lws_dll2		*tail;
+	struct lws_dll2		*head;
+
+	uint32_t		count;
+} lws_dll2_owner_t;
+
+static LWS_INLINE int
+lws_dll2_is_detached(const struct lws_dll2 *d) { return !d->owner; }
+
+static LWS_INLINE const struct lws_dll2_owner *
+lws_dll2_owner(const struct lws_dll2 *d) { return d->owner; }
+
+static LWS_INLINE struct lws_dll2 *
+lws_dll2_get_head(struct lws_dll2_owner *owner) { return owner->head; }
+
+static LWS_INLINE struct lws_dll2 *
+lws_dll2_get_tail(struct lws_dll2_owner *owner) { return owner->tail; }
+
+LWS_VISIBLE LWS_EXTERN void
+lws_dll2_add_head(struct lws_dll2 *d, struct lws_dll2_owner *owner);
+
+LWS_VISIBLE LWS_EXTERN void
+lws_dll2_add_tail(struct lws_dll2 *d, struct lws_dll2_owner *owner);
+
+LWS_VISIBLE LWS_EXTERN void
+lws_dll2_remove(struct lws_dll2 *d);
+
+LWS_VISIBLE LWS_EXTERN int
+lws_dll2_foreach_safe(struct lws_dll2_owner *owner, void *user,
+		      int (*cb)(struct lws_dll2 *d, void *user));
+
+LWS_VISIBLE LWS_EXTERN void
+lws_dll2_clear(struct lws_dll2 *d);
+
+LWS_VISIBLE LWS_EXTERN void
+lws_dll2_owner_clear(struct lws_dll2_owner *d);
+
+LWS_VISIBLE LWS_EXTERN void
+lws_dll2_add_before(struct lws_dll2 *d, struct lws_dll2 *after);
+
+LWS_VISIBLE LWS_EXTERN void
+lws_dll2_add_sorted(lws_dll2_t *d, lws_dll2_owner_t *own,
+		    int (*compare)(const lws_dll2_t *d, const lws_dll2_t *i));
+
+#if defined(_DEBUG)
+void
+lws_dll2_describe(struct lws_dll2_owner *owner, const char *desc);
+#else
+#define lws_dll2_describe(x, y)
+#endif
 
 /*
  * these are safe against the current container object getting deleted,
@@ -260,6 +362,7 @@ lws_buflist_append_segment(struct lws_buflist **head, const uint8_t *buf,
  */
 LWS_VISIBLE LWS_EXTERN size_t
 lws_buflist_next_segment_len(struct lws_buflist **head, uint8_t **buf);
+
 /**
  * lws_buflist_use_segment(): remove len bytes from the current segment
  *
@@ -277,6 +380,7 @@ lws_buflist_next_segment_len(struct lws_buflist **head, uint8_t **buf);
  */
 LWS_VISIBLE LWS_EXTERN int
 lws_buflist_use_segment(struct lws_buflist **head, size_t len);
+
 /**
  * lws_buflist_destroy_all_segments(): free all segments on the list
  *
@@ -331,15 +435,49 @@ LWS_VISIBLE LWS_EXTERN char *
 lws_strncpy(char *dest, const char *src, size_t size);
 
 /**
+ * lws_hex_to_byte_array(): convert hex string like 0123456789ab into byte data
+ *
+ * \param h: incoming NUL-terminated hex string
+ * \param dest: array to fill with binary decodes of hex pairs from h
+ * \param max: maximum number of bytes dest can hold, must be at least half
+ *		the size of strlen(h)
+ *
+ * This converts hex strings into an array of 8-bit representations, ie the
+ * input "abcd" produces two bytes of value 0xab and 0xcd.
+ *
+ * Returns number of bytes produced into \p dest, or -1 on error.
+ *
+ * Errors include non-hex chars and an odd count of hex chars in the input
+ * string.
+ */
+LWS_VISIBLE LWS_EXTERN int
+lws_hex_to_byte_array(const char *h, uint8_t *dest, int max);
+
+/*
+ * lws_timingsafe_bcmp(): constant time memcmp
+ *
+ * \param a: first buffer
+ * \param b: second buffer
+ * \param len: count of bytes to compare
+ *
+ * Return 0 if the two buffers are the same, else nonzero.
+ *
+ * Always compares all of the buffer before returning, so it can't be used as
+ * a timing oracle.
+ */
+
+LWS_VISIBLE LWS_EXTERN int
+lws_timingsafe_bcmp(const void *a, const void *b, uint32_t len);
+
+/**
  * lws_get_random(): fill a buffer with platform random data
  *
  * \param context: the lws context
  * \param buf: buffer to fill
  * \param len: how much to fill
  *
- * This is intended to be called from the LWS_CALLBACK_RECEIVE callback if
- * it's interested to see if the frame it's dealing with was sent in binary
- * mode.
+ * Fills buf with len bytes of random.  Returns the number of bytes set, if
+ * not equal to len, then getting the random failed.
  */
 LWS_VISIBLE LWS_EXTERN int
 lws_get_random(struct lws_context *context, void *buf, int len);
@@ -370,7 +508,7 @@ LWS_VISIBLE LWS_EXTERN void *
 lws_wsi_user(struct lws *wsi);
 
 /**
- * lws_wsi_set_user() - set the user data associated with the client connection
+ * lws_set_wsi_user() - set the user data associated with the client connection
  * \param wsi: lws connection
  * \param user: user data
  *
@@ -438,26 +576,6 @@ lws_now_secs(void);
  */
 LWS_VISIBLE LWS_EXTERN lws_usec_t
 lws_now_usecs(void);
-
-/**
- * lws_compare_time_t(): return relationship between two time_t
- *
- * \param context: struct lws_context
- * \param t1: time_t 1
- * \param t2: time_t 2
- *
- * returns <0 if t2 > t1; >0 if t1 > t2; or == 0 if t1 == t2.
- *
- * This is aware of clock discontiguities that may have affected either t1 or
- * t2 and adapts the comparison for them.
- *
- * For the discontiguity detection to work, you must avoid any arithmetic on
- * the times being compared.  For example to have a timeout that triggers
- * 15s from when it was set, store the time it was set and compare like
- * `if (lws_compare_time_t(context, now, set_time) > 15)`
- */
-LWS_VISIBLE LWS_EXTERN int
-lws_compare_time_t(struct lws_context *context, time_t t1, time_t t2);
 
 /**
  * lws_get_context - Allow getting lws_context from a Websocket connection
@@ -544,6 +662,12 @@ lws_get_opaque_parent_data(const struct lws *wsi);
 
 LWS_VISIBLE LWS_EXTERN void
 lws_set_opaque_parent_data(struct lws *wsi, void *data);
+
+LWS_VISIBLE LWS_EXTERN void *
+lws_get_opaque_user_data(const struct lws *wsi);
+
+LWS_VISIBLE LWS_EXTERN void
+lws_set_opaque_user_data(struct lws *wsi, void *data);
 
 LWS_VISIBLE LWS_EXTERN int
 lws_get_child_pending_on_writable(const struct lws *wsi);
@@ -655,7 +779,60 @@ lws_rx_flow_allow_all_protocol(const struct lws_context *context,
 LWS_VISIBLE LWS_EXTERN size_t
 lws_remaining_packet_payload(struct lws *wsi);
 
+#if defined(LWS_WITH_DIR)
 
+typedef enum {
+	LDOT_UNKNOWN,
+	LDOT_FILE,
+	LDOT_DIR,
+	LDOT_LINK,
+	LDOT_FIFO,
+	LDOTT_SOCKET,
+	LDOT_CHAR,
+	LDOT_BLOCK
+} lws_dir_obj_type_t;
+
+struct lws_dir_entry {
+	const char *name;
+	lws_dir_obj_type_t type;
+};
+
+typedef int
+lws_dir_callback_function(const char *dirpath, void *user,
+			  struct lws_dir_entry *lde);
+
+/**
+ * lws_dir() - get a callback for everything in a directory
+ *
+ * \param dirpath: the directory to scan
+ * \param user: pointer to give to callback
+ * \param cb: callback to receive information on each file or dir
+ *
+ * Calls \p cb (with \p user) for every object in dirpath.
+ *
+ * This wraps whether it's using POSIX apis, or libuv (as needed for windows,
+ * since it refuses to support POSIX apis for this).
+ */
+LWS_VISIBLE LWS_EXTERN int
+lws_dir(const char *dirpath, void *user, lws_dir_callback_function cb);
+#endif
+
+/**
+ * lws_get_allocated_heap() - if the platform supports it, returns amount of
+ *				heap allocated by lws itself
+ *
+ * On glibc currently, this reports the total amount of current logical heap
+ * allocation, found by tracking the amount allocated by lws_malloc() and
+ * friends and accounting for freed allocations via lws_free().
+ *
+ * This is useful for confirming where processwide heap allocations actually
+ * come from... this number represents all lws internal allocations, for
+ * fd tables, wsi allocations, ah, etc combined.  It doesn't include allocations
+ * from user code, since lws_malloc() etc are not exported from the library.
+ *
+ * On other platforms, it always returns 0.
+ */
+size_t lws_get_allocated_heap(void);
 
 /**
  * lws_is_ssl() - Find out if connection is using SSL
@@ -669,6 +846,7 @@ LWS_VISIBLE LWS_EXTERN int
 lws_is_ssl(struct lws *wsi);
 /**
  * lws_is_cgi() - find out if this wsi is running a cgi process
+ *
  * \param wsi: lws connection
  */
 LWS_VISIBLE LWS_EXTERN int
@@ -677,9 +855,8 @@ lws_is_cgi(struct lws *wsi);
 /**
  * lws_open() - platform-specific wrapper for open that prepares the fd
  *
- * \param file: the filepath to open
- * \param oflag: option flags
- * \param mode: optional mode of any created file
+ * \param __file: the filepath to open
+ * \param __oflag: option flags
  *
  * This is a wrapper around platform open() that sets options on the fd
  * according to lws policy.  Currently that is FD_CLOEXEC to stop the opened
@@ -709,128 +886,41 @@ LWS_VISIBLE LWS_EXTERN SSL*
 lws_get_ssl(struct lws *wsi);
 #endif
 
-/** \defgroup smtp SMTP related functions
- * ##SMTP related functions
- * \ingroup lwsapi
- *
- * These apis let you communicate with a local SMTP server to send email from
- * lws.  It handles all the SMTP sequencing and protocol actions.
- *
- * Your system should have postfix, sendmail or another MTA listening on port
- * 25 and able to send email using the "mail" commandline app.  Usually distro
- * MTAs are configured for this by default.
- *
- * It runs via its own libuv events if initialized (which requires giving it
- * a libuv loop to attach to).
- *
- * It operates using three callbacks, on_next() queries if there is a new email
- * to send, on_get_body() asks for the body of the email, and on_sent() is
- * called after the email is successfully sent.
- *
- * To use it
- *
- *  - create an lws_email struct
- *
- *  - initialize data, loop, the email_* strings, max_content_size and
- *    the callbacks
- *
- *  - call lws_email_init()
- *
- *  When you have at least one email to send, call lws_email_check() to
- *  schedule starting to send it.
- */
-//@{
-#ifdef LWS_WITH_SMTP
+LWS_VISIBLE LWS_EXTERN void
+lws_explicit_bzero(void *p, size_t len);
 
-/** enum lwsgs_smtp_states - where we are in SMTP protocol sequence */
-enum lwsgs_smtp_states {
-	LGSSMTP_IDLE, /**< awaiting new email */
-	LGSSMTP_CONNECTING, /**< opening tcp connection to MTA */
-	LGSSMTP_CONNECTED, /**< tcp connection to MTA is connected */
-	LGSSMTP_SENT_HELO, /**< sent the HELO */
-	LGSSMTP_SENT_FROM, /**< sent FROM */
-	LGSSMTP_SENT_TO, /**< sent TO */
-	LGSSMTP_SENT_DATA, /**< sent DATA request */
-	LGSSMTP_SENT_BODY, /**< sent the email body */
-	LGSSMTP_SENT_QUIT, /**< sent the session quit */
-};
+typedef struct lws_humanize_unit {
+	const char *name; /* array ends with NULL name */
+	uint64_t factor;
+} lws_humanize_unit_t;
 
-/** struct lws_email - abstract context for performing SMTP operations */
-struct lws_email {
-	void *data;
-	/**< opaque pointer set by user code and available to the callbacks */
-	uv_loop_t *loop;
-	/**< the libuv loop we will work on */
-
-	char email_smtp_ip[32]; /**< Fill before init, eg, "127.0.0.1" */
-	char email_helo[32];	/**< Fill before init, eg, "myserver.com" */
-	char email_from[100];	/**< Fill before init or on_next */
-	char email_to[100];	/**< Fill before init or on_next */
-
-	unsigned int max_content_size;
-	/**< largest possible email body size */
-
-	/* Fill all the callbacks before init */
-
-	int (*on_next)(struct lws_email *email);
-	/**< (Fill in before calling lws_email_init)
-	 * called when idle, 0 = another email to send, nonzero is idle.
-	 * If you return 0, all of the email_* char arrays must be set
-	 * to something useful. */
-	int (*on_sent)(struct lws_email *email);
-	/**< (Fill in before calling lws_email_init)
-	 * called when transfer of the email to the SMTP server was
-	 * successful, your callback would remove the current email
-	 * from its queue */
-	int (*on_get_body)(struct lws_email *email, char *buf, int len);
-	/**< (Fill in before calling lws_email_init)
-	 * called when the body part of the queued email is about to be
-	 * sent to the SMTP server. */
-
-
-	/* private things */
-	uv_timer_t timeout_email; /**< private */
-	enum lwsgs_smtp_states estate; /**< private */
-	uv_connect_t email_connect_req; /**< private */
-	uv_tcp_t email_client; /**< private */
-	time_t email_connect_started; /**< private */
-	char email_buf[256]; /**< private */
-	char *content; /**< private */
-};
+LWS_VISIBLE LWS_EXTERN const lws_humanize_unit_t humanize_schema_si[];
+LWS_VISIBLE LWS_EXTERN const lws_humanize_unit_t humanize_schema_si_bytes[];
+LWS_VISIBLE LWS_EXTERN const lws_humanize_unit_t humanize_schema_us[];
 
 /**
- * lws_email_init() - Initialize a struct lws_email
+ * lws_humanize() - Convert possibly large number to himan-readable uints
  *
- * \param email: struct lws_email to init
- * \param loop: libuv loop to use
- * \param max_content: max email content size
+ * \param buf: result string buffer
+ * \param len: remaining length in \p buf
+ * \param value: the uint64_t value to represent
+ * \param schema: and array of scaling factors and units
  *
- * Prepares a struct lws_email for use ending SMTP
+ * This produces a concise string representation of \p value, referening the
+ * schema \p schema of scaling factors and units to find the smallest way to
+ * render it.
+ *
+ * Three schema are exported from lws for general use, humanize_schema_si, which
+ * represents as, eg, "  22.130Gi" or " 128      "; humanize_schema_si_bytes
+ * which is the same but shows, eg, "  22.130GiB", and humanize_schema_us,
+ * which represents a count of us as a human-readable time like "  14.350min",
+ * or "  1.500d".
+ *
+ * You can produce your own schema.
  */
+
 LWS_VISIBLE LWS_EXTERN int
-lws_email_init(struct lws_email *email, uv_loop_t *loop, int max_content);
-
-/**
- * lws_email_check() - Request check for new email
- *
- * \param email: struct lws_email context to check
- *
- * Schedules a check for new emails in 1s... call this when you have queued an
- * email for send.
- */
-LWS_VISIBLE LWS_EXTERN void
-lws_email_check(struct lws_email *email);
-/**
- * lws_email_destroy() - stop using the struct lws_email
- *
- * \param email: the struct lws_email context
- *
- * Stop sending email using email and free allocations
- */
-LWS_VISIBLE LWS_EXTERN void
-lws_email_destroy(struct lws_email *email);
-
-#endif
-//@}
+lws_humanize(char *buf, int len, uint64_t value,
+	     const lws_humanize_unit_t *schema);
 
 ///@}

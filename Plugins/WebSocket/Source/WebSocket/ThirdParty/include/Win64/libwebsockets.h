@@ -1,7 +1,7 @@
 /*
  * libwebsockets - small server side websockets and web server implementation
  *
- * Copyright (C) 2010-2018 Andy Green <andy@warmcat.com>
+ * Copyright (C) 2010-2019 Andy Green <andy@warmcat.com>
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -38,9 +38,28 @@ extern "C" {
 
 #include "lws_config.h"
 
+/* place for one-shot opaque forward references */
+
+typedef struct lws_sequencer lws_seq_t; /* opaque */
+typedef struct lws_sorted_usec_list lws_sorted_usec_list_t; /* opaque */
+typedef struct lws_dsh lws_dsh_t;
+
 /*
  * CARE: everything using cmake defines needs to be below here
  */
+
+#define LWS_US_PER_SEC 1000000
+#define LWS_MS_PER_SEC 1000
+#define LWS_US_PER_MS 1000
+#define LWS_NS_PER_US 1000
+
+#define LWS_KI (1024)
+#define LWS_MI (LWS_KI * 1024)
+#define LWS_GI (LWS_MI * 1024)
+#define LWS_TI ((uint64_t)LWS_GI * 1024)
+#define LWS_PI ((uint64_t)LWS_TI * 1024)
+
+#define LWS_US_TO_MS(x) ((x + (LWS_US_PER_MS / 2)) / LWS_US_PER_MS)
 
 #if defined(LWS_HAS_INTPTR_T)
 #include <stdint.h>
@@ -79,12 +98,11 @@ typedef unsigned long long lws_intptr_t;
 #else
 #define LWS_EXTERN extern __declspec(dllimport)
 #endif
-#else
-#define LWS_EXTERN
 #endif
 #endif
 
 #define LWS_INVALID_FILE INVALID_HANDLE_VALUE
+#define LWS_SOCK_INVALID (INVALID_SOCKET)
 #define LWS_O_RDONLY _O_RDONLY
 #define LWS_O_WRONLY _O_WRONLY
 #define LWS_O_CREAT _O_CREAT
@@ -115,12 +133,15 @@ typedef unsigned long long lws_intptr_t;
 #include <poll.h>
 #include <netdb.h>
 #define LWS_INVALID_FILE -1
+#define LWS_SOCK_INVALID (-1)
 #else
 #define getdtablesize() (30)
 #if defined(LWS_WITH_ESP32)
 #define LWS_INVALID_FILE NULL
+#define LWS_SOCK_INVALID (-1)
 #else
 #define LWS_INVALID_FILE NULL
+#define LWS_SOCK_INVALID (-1)
 #endif
 #endif
 
@@ -173,7 +194,7 @@ typedef unsigned long long lws_intptr_t;
 #ifdef _WIN32
 #define random rand
 #else
-#if !defined(OPTEE_TA)
+#if !defined(LWS_PLAT_OPTEE)
 #include <sys/time.h>
 #include <unistd.h>
 #endif
@@ -333,10 +354,118 @@ typedef int lws_sockfd_type;
 typedef int lws_filefd_type;
 #endif
 
+#if defined(LWS_PLAT_OPTEE)
+#include <time.h>
+struct timeval {
+	time_t         	tv_sec;
+	unsigned int    tv_usec;
+};
+#if defined(LWS_WITH_NETWORK)
+// #include <poll.h>
 #define lws_pollfd pollfd
-#define LWS_POLLHUP (POLLHUP|POLLERR)
+
+struct timezone;
+
+int gettimeofday(struct timeval *tv, struct timezone *tz);
+
+    /* Internet address. */
+    struct in_addr {
+        uint32_t       s_addr;     /* address in network byte order */
+    };
+
+typedef unsigned short sa_family_t;
+typedef unsigned short in_port_t;
+typedef uint32_t socklen_t;
+
+#include <libwebsockets/lws-optee.h>
+
+#if !defined(TEE_SE_READER_NAME_MAX)
+           struct addrinfo {
+               int              ai_flags;
+               int              ai_family;
+               int              ai_socktype;
+               int              ai_protocol;
+               socklen_t        ai_addrlen;
+               struct sockaddr *ai_addr;
+               char            *ai_canonname;
+               struct addrinfo *ai_next;
+           };
+#endif
+
+ssize_t recv(int sockfd, void *buf, size_t len, int flags);
+ssize_t send(int sockfd, const void *buf, size_t len, int flags);
+ssize_t read(int fd, void *buf, size_t count);
+int getsockopt(int sockfd, int level, int optname,
+                      void *optval, socklen_t *optlen);
+       int setsockopt(int sockfd, int level, int optname,
+                      const void *optval, socklen_t optlen);
+int connect(int sockfd, const struct sockaddr *addr,
+                   socklen_t addrlen);
+
+extern int errno;
+
+uint16_t ntohs(uint16_t netshort);
+uint16_t htons(uint16_t hostshort);
+
+int bind(int sockfd, const struct sockaddr *addr,
+                socklen_t addrlen);
+
+
+#define  MSG_NOSIGNAL 0x4000
+#define	EAGAIN		11
+#define EINTR		4
+#define EWOULDBLOCK	EAGAIN
+#define	EADDRINUSE	98	
+#define INADDR_ANY	0
+#define AF_INET		2
+#define SHUT_WR 1
+#define AF_UNSPEC	0
+#define PF_UNSPEC	0
+#define SOCK_STREAM	1
+#define SOCK_DGRAM	2
+# define AI_PASSIVE	0x0001
+#define IPPROTO_UDP	17
+#define SOL_SOCKET	1
+#define SO_SNDBUF	7
+#define	EISCONN		106	
+#define	EALREADY	114
+#define	EINPROGRESS	115
+int shutdown(int sockfd, int how);
+int close(int fd);
+int atoi(const char *nptr);
+long long atoll(const char *nptr);
+
+int socket(int domain, int type, int protocol);
+       int getaddrinfo(const char *node, const char *service,
+                       const struct addrinfo *hints,
+                       struct addrinfo **res);
+
+       void freeaddrinfo(struct addrinfo *res);
+
+#if !defined(TEE_SE_READER_NAME_MAX)
+struct lws_pollfd
+{
+        int fd;                     /* File descriptor to poll.  */
+        short int events;           /* Types of events poller cares about.  */
+        short int revents;          /* Types of events that actually occurred.  */
+};
+#endif
+
+int poll(struct pollfd *fds, int nfds, int timeout);
+
+#define LWS_POLLHUP (0x18)
+#define LWS_POLLIN (1)
+#define LWS_POLLOUT (4)
+#else
+struct lws_pollfd;
+struct sockaddr_in;
+#endif
+#else
+#define lws_pollfd pollfd
+#define LWS_POLLHUP (POLLHUP | POLLERR)
 #define LWS_POLLIN (POLLIN)
 #define LWS_POLLOUT (POLLOUT)
+#endif
 #endif
 
 
@@ -374,6 +503,9 @@ typedef unsigned long long lws_filepos_t;
 typedef long long lws_fileofs_t;
 typedef uint32_t lws_fop_flags_t;
 
+#define lws_concat_temp(_t, _l) (_t + sizeof(_t) - _l)
+#define lws_concat_used(_t, _l) (sizeof(_t) - _l)
+
 /** struct lws_pollargs - argument structure for all external poll related calls
  * passed in via 'in' */
 struct lws_pollargs {
@@ -389,6 +521,7 @@ struct lws_tokens;
 struct lws_vhost;
 struct lws;
 
+#include <libwebsockets/lws-system.h>
 #include <libwebsockets/lws-ws-close.h>
 #include <libwebsockets/lws-callbacks.h>
 #include <libwebsockets/lws-ws-state.h>
@@ -400,13 +533,14 @@ struct lws;
 #include <libwebsockets/lws-http.h>
 #include <libwebsockets/lws-spa.h>
 #include <libwebsockets/lws-purify.h>
+#include <libwebsockets/lws-misc.h>
+#include <libwebsockets/lws-dsh.h>
 #include <libwebsockets/lws-timeout-timer.h>
 #include <libwebsockets/lws-service.h>
 #include <libwebsockets/lws-write.h>
 #include <libwebsockets/lws-writeable.h>
 #include <libwebsockets/lws-adopt.h>
 #include <libwebsockets/lws-network-helper.h>
-#include <libwebsockets/lws-misc.h>
 #include <libwebsockets/lws-ring.h>
 #include <libwebsockets/lws-sha1-base64.h>
 #include <libwebsockets/lws-x509.h>
@@ -414,24 +548,38 @@ struct lws;
 #include <libwebsockets/lws-vfs.h>
 #include <libwebsockets/lws-lejp.h>
 #include <libwebsockets/lws-stats.h>
+#include <libwebsockets/lws-struct.h>
 #include <libwebsockets/lws-threadpool.h>
 #include <libwebsockets/lws-tokenize.h>
 #include <libwebsockets/lws-lwsac.h>
 #include <libwebsockets/lws-fts.h>
 #include <libwebsockets/lws-diskcache.h>
+#include <libwebsockets/lws-retry.h>
+#include <libwebsockets/lws-sequencer.h>
+
+#include <libwebsockets/abstract/abstract.h>
+
+#include <libwebsockets/lws-test-sequencer.h>
 
 #if defined(LWS_WITH_TLS)
 
 #if defined(LWS_WITH_MBEDTLS)
+#include <mbedtls/md5.h>
 #include <mbedtls/sha1.h>
 #include <mbedtls/sha256.h>
 #include <mbedtls/sha512.h>
 #endif
 
+#include <libwebsockets/lws-gencrypto.h>
 #include <libwebsockets/lws-genhash.h>
 #include <libwebsockets/lws-genrsa.h>
+#include <libwebsockets/lws-genaes.h>
+#include <libwebsockets/lws-genec.h>
+
 #include <libwebsockets/lws-jwk.h>
+#include <libwebsockets/lws-jose.h>
 #include <libwebsockets/lws-jws.h>
+#include <libwebsockets/lws-jwe.h>
 
 #endif
 

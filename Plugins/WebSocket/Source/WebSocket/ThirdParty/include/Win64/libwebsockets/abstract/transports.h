@@ -21,11 +21,41 @@
  * included from libwebsockets.h
  */
 
-struct lws_abstract;
-typedef struct lws_abstract lws_abstract_t;
+/*
+ * Abstract transport ops
+ */
 
-LWS_VISIBLE LWS_EXTERN void
-lws_abstract_copy(lws_abstract_t *dest, const lws_abstract_t *src);
+typedef struct lws_abs_transport {
+	const char *name;
+	int alloc;
 
-LWS_VISIBLE LWS_EXTERN const lws_abstract_t *
-lws_abstract_get_by_name(const char *name);
+	int (*create)(struct lws_abs *abs);
+	void (*destroy)(lws_abs_transport_inst_t **d);
+
+	/* events the abstract protocol invokes (handled by transport) */
+
+	int (*tx)(lws_abs_transport_inst_t *d, uint8_t *buf, size_t len);
+	int (*client_conn)(const lws_abs_t *abs);
+	int (*close)(lws_abs_transport_inst_t *d);
+	int (*ask_for_writeable)(lws_abs_transport_inst_t *d);
+	int (*set_timeout)(lws_abs_transport_inst_t *d, int reason, int secs);
+	int (*state)(lws_abs_transport_inst_t *d);
+} lws_abs_transport_t;
+
+/**
+ * lws_abs_protocol_get_by_name() - returns a pointer to the named protocol ops
+ *
+ * \param name: the name of the abstract protocol
+ *
+ * Returns a pointer to the named protocol ops struct if available, otherwise
+ * NULL.
+ */
+LWS_VISIBLE LWS_EXTERN const lws_abs_transport_t *
+lws_abs_transport_get_by_name(const char *name);
+
+/*
+ * bring in public api pieces from transports
+ */
+
+#include <libwebsockets/abstract/transports/raw-skt.h>
+#include <libwebsockets/abstract/transports/unit-test.h>

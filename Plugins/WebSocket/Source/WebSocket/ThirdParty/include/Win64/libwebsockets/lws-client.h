@@ -38,6 +38,7 @@ enum lws_client_connect_ssl_connection_flags {
 	LCCSCF_ALLOW_SELFSIGNED			= (1 << 1),
 	LCCSCF_SKIP_SERVER_CERT_HOSTNAME_CHECK	= (1 << 2),
 	LCCSCF_ALLOW_EXPIRED			= (1 << 3),
+	LCCSCF_ALLOW_INSECURE			= (1 << 4),
 
 	LCCSCF_PIPELINE				= (1 << 16),
 		/**< Serialize / pipeline multiple client connections
@@ -117,6 +118,18 @@ struct lws_client_connect_info {
 	 *       list of roles built into lws
 	 * non-NULL: require one from provided comma-separated list of alpn
 	 *           tokens
+	 */
+
+	lws_seq_t *seq;
+	/**< NULL, or an lws_seq_t that wants to be given messages about
+	 * this wsi's lifecycle as it connects, errors or closes.
+	 */
+
+	void *opaque_user_data;
+	/**< This data has no meaning to lws but is applied to the client wsi
+	 *   and can be retrieved by user code with lws_get_opaque_user_data().
+	 *   It's also provided with sequencer messages if the wsi is bound to
+	 *   an lws_seq_t.
 	 */
 
 	/* Add new things just above here ---^

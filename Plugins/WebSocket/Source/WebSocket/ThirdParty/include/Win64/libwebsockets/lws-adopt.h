@@ -68,6 +68,7 @@ typedef enum {
 	LWS_ADOPT_SOCKET = 2,		/* flag: absent implies file descr */
 	LWS_ADOPT_ALLOW_SSL = 4,	/* flag: if set requires LWS_ADOPT_SOCKET */
 	LWS_ADOPT_FLAG_UDP = 16,	/* flag: socket is UDP */
+	LWS_ADOPT_FLAG_RAW_PROXY = 32,	/* flag: raw proxy */
 
 	LWS_ADOPT_RAW_SOCKET_UDP = LWS_ADOPT_SOCKET | LWS_ADOPT_FLAG_UDP,
 } lws_adoption_type;
@@ -77,7 +78,7 @@ typedef union {
 	lws_filefd_type filefd;
 } lws_sock_file_fd_type;
 
-#if !defined(LWS_WITH_ESP32)
+#if !defined(LWS_WITH_ESP32) && !defined(LWS_PLAT_OPTEE)
 struct lws_udp {
 	struct sockaddr sa;
 	socklen_t salen;
@@ -87,11 +88,11 @@ struct lws_udp {
 };
 #endif
 
-/*
+/**
 * lws_adopt_descriptor_vhost() - adopt foreign socket or file descriptor
 * if socket descriptor, should already have been accepted from listen socket
 *
-* \param vhost: lws vhost
+* \param vh: lws vhost
 * \param type: OR-ed combinations of lws_adoption_type flags
 * \param fd: union with either .sockfd or .filefd set
 * \param vh_prot_name: NULL or vh protocol name to bind raw connection to
@@ -118,7 +119,7 @@ lws_adopt_descriptor_vhost(struct lws_vhost *vh, lws_adoption_type type,
  * \param accept_fd:	fd of already-accepted socket to adopt
  * \param readbuf:	NULL or pointer to data that must be drained before reading from
  *		accept_fd
- * \param len:	The length of the data held at \param readbuf
+ * \param len:	The length of the data held at \p readbuf
  *
  * Either returns new wsi bound to accept_fd, or closes accept_fd and
  * returns NULL, having cleaned up any new wsi pieces.
@@ -129,10 +130,10 @@ lws_adopt_descriptor_vhost(struct lws_vhost *vh, lws_adoption_type type,
  * If your external code did not already read from the socket, you can use
  * lws_adopt_socket() instead.
  *
- * This api is guaranteed to use the data at \param readbuf first, before reading from
+ * This api is guaranteed to use the data at \p readbuf first, before reading from
  * the socket.
  *
- * readbuf is limited to the size of the ah rx buf, currently 2048 bytes.
+ * \p readbuf is limited to the size of the ah rx buf, currently 2048 bytes.
  */
 LWS_VISIBLE LWS_EXTERN struct lws *
 lws_adopt_socket_readbuf(struct lws_context *context, lws_sockfd_type accept_fd,
@@ -142,9 +143,8 @@ lws_adopt_socket_readbuf(struct lws_context *context, lws_sockfd_type accept_fd,
  * accepted it for vhost.
  * \param vhost:	lws vhost
  * \param accept_fd:	fd of already-accepted socket to adopt
- * \param readbuf:	NULL or pointer to data that must be drained before
- * 			reading from accept_fd
- * \param len:		The length of the data held at \param readbuf
+ * \param readbuf:	NULL or pointer to data that must be drained before reading from accept_fd
+ * \param len:		The length of the data held at \p readbuf
  *
  * Either returns new wsi bound to accept_fd, or closes accept_fd and
  * returns NULL, having cleaned up any new wsi pieces.
@@ -155,10 +155,10 @@ lws_adopt_socket_readbuf(struct lws_context *context, lws_sockfd_type accept_fd,
  * If your external code did not already read from the socket, you can use
  * lws_adopt_socket() instead.
  *
- * This api is guaranteed to use the data at \param readbuf first, before reading from
+ * This api is guaranteed to use the data at \p readbuf first, before reading from
  * the socket.
  *
- * readbuf is limited to the size of the ah rx buf, currently 2048 bytes.
+ * \p readbuf is limited to the size of the ah rx buf, currently 2048 bytes.
  */
 LWS_VISIBLE LWS_EXTERN struct lws *
 lws_adopt_socket_vhost_readbuf(struct lws_vhost *vhost,
