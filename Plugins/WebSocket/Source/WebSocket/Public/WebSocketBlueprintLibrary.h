@@ -130,6 +130,9 @@ class WEBSOCKET_API UWebSocketBlueprintLibrary : public UBlueprintFunctionLibrar
 {
 	GENERATED_BODY()
 public:
+	// Return the library singleton object
+	UFUNCTION(BlueprintPure, Category = "WebSocket")
+	static UWebSocketLib *GetWebSocketLib();
 
 	// Create A new context
 	UFUNCTION(BlueprintCallable, Category = "WebSocket")
@@ -163,10 +166,6 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "WebSocket")
 	static bool ObjectToJson(UObject* Object, FString& data);
-
-	// Return the library singleton object
-	UFUNCTION(BlueprintCallable, Category = "WebSocket")
-	static UWebSocketLib *GetWebSocketLib();
 
 	static bool JsonValueToUProperty(TSharedPtr<FJsonValue> JsonValue, UProperty* Property, void* OutValue, int64 CheckFlags, int64 SkipFlags);
 	static bool ConvertScalarJsonValueToUProperty(TSharedPtr<FJsonValue> JsonValue, UProperty* Property, void* OutValue, int64 CheckFlags, int64 SkipFlags);
