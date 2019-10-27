@@ -301,7 +301,8 @@ void UWebSocketContext::Tick(float DeltaTime)
 #else
 	if (mlwsContext != nullptr)
 	{
-		lws_service(mlwsContext, 0);
+		// polling service, don't block.
+		lws_service(mlwsContext, -1);
 	}
 #endif
 }
