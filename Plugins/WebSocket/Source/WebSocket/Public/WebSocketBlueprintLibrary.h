@@ -101,7 +101,7 @@ ENUM_CLASS_FLAGS(EWebSocketLogLevel)
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FWebSocketLog, int, level, const FString&, message);
 
 // A singleton class representing the libwebsockets library
-UCLASS(BlueprintType, Blueprintable)
+UCLASS(BlueprintType)
 class UWebSocketLib : public UObject
 {
 	GENERATED_BODY()
@@ -131,13 +131,17 @@ class WEBSOCKET_API UWebSocketBlueprintLibrary : public UBlueprintFunctionLibrar
 	GENERATED_BODY()
 public:
 
+	// Create A new context
+	UFUNCTION(BlueprintCallable, Category = "WebSocket")
+	static UWebSocketContext* CreateContext(FWebSocketContextOptions ContextOptions);
+
+	// Legacy functions, dealing with a static context.  Having a single static
+	// context is deprectated, it is unpredictable, particularly when starting
+	// multiple clients.
+
 	// Create or replace the static web socket context
 	UFUNCTION(BlueprintCallable, Category = "WebSocket")
-	static void CreateStaticContext(FWebSocketContextOptions ContextOptions);
-
-	// Destroy the static web socket context
-	UFUNCTION(BlueprintCallable, Category = "WebSocket")
-	static void DestroyStaticContext();
+	static void SetStaticContext(UWebSocketContext* context=nullptr);
 
 	// Create an unconnected sockets
 	UFUNCTION(BlueprintCallable, Category = "WebSocket")

@@ -86,9 +86,8 @@ static const struct lws_extension exts[] = {
 
 void UWebSocketContext::BeginDestroy()
 {
-	Super::BeginDestroy();
 	DestroyCtx();
-	s_websocketCtx.Reset();
+	Super::BeginDestroy();
 }
 
 UWebSocketContext::~UWebSocketContext()

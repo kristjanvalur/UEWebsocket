@@ -76,23 +76,14 @@ void UWebSocketLib::DoLog(int level, const FString& msg)
 TWeakObjectPtr<UWebSocketLib> UWebSocketLib::websocketLib;
 
 
-void UWebSocketBlueprintLibrary::CreateStaticContext(FWebSocketContextOptions ContextOptions)
+UWebSocketContext* UWebSocketBlueprintLibrary::CreateContext(FWebSocketContextOptions ContextOptions)
 {
-	DestroyStaticContext();
-	if (s_websocketCtx.Get() == nullptr)
-	{
-		s_websocketCtx = NewObject<UWebSocketContext>();
-		s_websocketCtx->CreateCtx(ContextOptions);
-		s_websocketCtx->AddToRoot();
-	}
+	UWebSocketContext *context = NewObject<UWebSocketContext>();
+	context->CreateCtx(ContextOptions);
+	return context;
 }
 
-UWebSocketLib *UWebSocketBlueprintLibrary::GetWebSocketLib()
-{
-	return UWebSocketLib::Get();
-}
-
-void UWebSocketBlueprintLibrary::DestroyStaticContext()
+static void DestroyStaticContext()
 {
 	if (s_websocketCtx.Get() != nullptr)
 	{
@@ -102,38 +93,52 @@ void UWebSocketBlueprintLibrary::DestroyStaticContext()
 	}
 }
 
-UWebSocketBase* UWebSocketBlueprintLibrary::CreateSocket()
+// return the static context or create one with default options if missing.
+static UWebSocketContext* EnsureStaticContext()
 {
 	if (s_websocketCtx.Get() == nullptr)
 	{
-		CreateStaticContext(FWebSocketContextOptions());
+		s_websocketCtx = NewObject<UWebSocketContext>();
+		s_websocketCtx->CreateCtx(FWebSocketContextOptions());
+		s_websocketCtx->AddToRoot();
 	}
-	return s_websocketCtx->CreateSocket();
+	return s_websocketCtx.Get();
+}
+
+// set the static context to the given one.
+void UWebSocketBlueprintLibrary::SetStaticContext(UWebSocketContext* context)
+{
+	DestroyStaticContext();
+	if (context != nullptr)
+	{
+		s_websocketCtx = context;
+		s_websocketCtx->AddToRoot();
+	}
+}
+
+UWebSocketLib *UWebSocketBlueprintLibrary::GetWebSocketLib()
+{
+	return UWebSocketLib::Get();
+}
+
+UWebSocketBase* UWebSocketBlueprintLibrary::CreateSocket()
+{
+	return EnsureStaticContext()->CreateSocket();
 }
 
 UWebSocketBase* UWebSocketBlueprintLibrary::Connect(const FString& url, FWebSocketConnectOptions ConnectOptions, bool& connectFail)
 {
-	if (s_websocketCtx.Get() == nullptr)
-	{
-		CreateStaticContext(FWebSocketContextOptions());
-	}
-	return s_websocketCtx->Connect(url, TMap<FString, FString>(), ConnectOptions, connectFail);
+	return EnsureStaticContext()->Connect(url, TMap<FString, FString>(), ConnectOptions, connectFail);
 }
 
 UWebSocketBase* UWebSocketBlueprintLibrary::ConnectWithHeader(const FString& url, const TArray<FWebSocketHeaderPair>& header, FWebSocketConnectOptions ConnectOptions, bool& connectFail)
 {
-	if(s_websocketCtx.Get() == nullptr)
-	{
-		CreateStaticContext(FWebSocketContextOptions());
-	}
-
 	TMap<FString, FString> headerMap;
 	for (int i = 0; i < header.Num(); i++)
 	{
 		headerMap.Add(header[i].key, header[i].value);
 	}
-
-	return s_websocketCtx->Connect(url, headerMap, ConnectOptions, connectFail);
+	return EnsureStaticContext()->Connect(url, headerMap, ConnectOptions, connectFail);
 }
 
 bool UWebSocketBlueprintLibrary::GetJsonIntField(const FString& data, const FString& key, int& iValue)

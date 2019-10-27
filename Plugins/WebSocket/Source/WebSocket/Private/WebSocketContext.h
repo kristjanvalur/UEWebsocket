@@ -47,7 +47,7 @@ class UWebSocketBase;
 /**
  * 
  */
-UCLASS()
+UCLASS(Blueprintable)
 class UWebSocketContext : public UObject, public FTickableGameObject
 {
 	GENERATED_BODY()
