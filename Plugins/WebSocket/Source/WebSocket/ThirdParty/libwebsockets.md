@@ -1,28 +1,23 @@
-# building the libwebsocket for UE4.  Target is windows, 64 bits.
+# building the libwebsockets for UE4.  Target is windows, 64 bits.
 
-1. Get libwebsockets off github.  Check out the v3.1 stable branch (or whichever branch you intend to use)
+This file contains instructions for building the libwebsockets third party library, which is used by UEWebsocket.  For Windows, a set of headers and libraries must be generated and added to this project.  For other platforms, well, it is unknown.
+
+1. Get *libwebsockets* off github.  Check out the v3.2 stable branch (or whichever branch you intend to use, but this project currently uses that.)  https://github.com/warmcat/libwebsockets/tree/v3.2-stable
 2. Read the READMEs/README.build.md
 3. Install cmake as instructed for your windows machine
 
-4. *Optional:* Install OpenSSL developer libraries.
-   You need the 1.0.x series for 4.21 and older, and 1.1.1 for 4.22.
+4. Install OpenSSL developer libraries.
+   You need the 1.0.x series for Unreal Engine 4.21 and older, and 1.1.1 for 4.22.
    Download from here https://slproweb.com/products/Win32OpenSSL.html don't use the 'light' version, and install everything in default place (c:/Program Files/OpenSSL-Win64)
-   Note that UE4.22 has upgraded openssl to 1.1.0 so you need to install that.
+   Note that UE4.22 has upgraded openssl to 1.1.0 so you need to install the 1.1.x version
 
-5. Better: Just install ue4.22, and use the openssl from its thirdparty folder. see below
-
-6. construct the projects by running cmake.  For help on cmake options, see the CMakeLists.txt file under the root.
+6. construct the projects by running cmake.  For help on cmake options, see the CMakeLists.txt file under the root of the libwebsockets project.
    - Open a Visual studio command shell (Win64)
    - First create a "build" folder under the root and cd into it.
    - execute cmake, here are the options:
    - -G "Visual Studio 15 Win64"  (for win64 and VS2017)
    - -DCMAKE_INSTALL_PREFIX=d:\inst  (or wherever, just not c:\Program Files\)
    - ..  (the source dir)
-
-   If ue422 is in `d:\UE4\` you need these additional flags to cmake:
-     - -DLWS_OPENSSL_INCLUDE_DIRS=D:\UE4\UE_4.22\Engine\Source\ThirdParty\OpenSSL\1.1.1\Include\Win64\VS2015
-     - -DLWS_OPENSSL_LIBRARIES=D:\UE4\UE_4.22\Engine\Source\ThirdParty\OpenSSL\1.1.1\lib\Win64\VS2015\Release\libcrypto.lib;D:\UE4\UE_4.22\Engine\Source\ThirdParty\OpenSSL\1.1.1\lib\Win64\VS2015\Release\libssl.lib
-     - *UPDATE* the above doesn't work, cmake won't be able to make the correct library for some reason.
 
    Verify that CMake has found the correct verision of openssl.
 
