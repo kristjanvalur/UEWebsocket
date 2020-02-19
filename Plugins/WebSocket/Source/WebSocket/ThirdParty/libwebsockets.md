@@ -7,9 +7,10 @@ This file contains instructions for building the libwebsockets third party libra
 3. Install cmake as instructed for your windows machine
 
 4. Install OpenSSL developer libraries.
-   You need the 1.0.x series for Unreal Engine 4.21 and older, and 1.1.1 for 4.22.
+   You need the 1.0.x series for Unreal Engine 4.21 and older, and 1.1.1 for 4.22.  This is assuming Win64 targets.  Other targets,
+   such as IOS or Android, use different versions.  See \Engine\Source\ThirdParty\OpenSSL\OpenSSL.Build.cs for details.
+   The intent is to link to the openssl libraries from UE4, but you need to install the correct development headers for libwebsockets and the *cmake* config for libwebsockets will look only in default places for those.
    Download from here https://slproweb.com/products/Win32OpenSSL.html don't use the 'light' version, and install everything in default place (c:/Program Files/OpenSSL-Win64)
-   Note that UE4.22 has upgraded openssl to 1.1.0 so you need to install the 1.1.x version
 
 6. construct the projects by running cmake.  For help on cmake options, see the CMakeLists.txt file under the root of the libwebsockets project.
    - Open a Visual studio command shell (Win64)
