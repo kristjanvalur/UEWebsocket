@@ -1,6 +1,19 @@
-# building the libwebsockets for UE4.  Target is windows, 64 bits.
+# building the libwebsockets for UE4.
+This file contains instructions for building the libwebsockets third party library, which is used by UEWebsocket.
 
-This file contains instructions for building the libwebsockets third party library, which is used by UEWebsocket.  For Windows, a set of headers and libraries must be generated and added to this project.  For other platforms, well, it is unknown.
+libwebsockets depends on openssl.  Our approach is to use the same api level of openssl as UE4
+uses.  For recent windows versions, this is 1.1.1.  Android and IOS are still at level 1.0.1.
+
+libwebsockets requires the correct headers for compiling and it creates a statis library.  For linking
+the plugin, placing a dependency on unreal's OpenSSL module allows us to link.
+
+The full openssl headers are present in the plugin, and also sometimes the openssl
+static libs librcypto.a and libssl.a.  These can be used, but it is probably better to link with OpenSSL.
+
+These instructions are how to build the openssl libs and libwebsockets libs to add to the third party libs.
+
+## Windows, 64 bits.
+
 
 1. Get *libwebsockets* off github.  Check out the v3.2 stable branch (or whichever branch you intend to use, but this project currently uses that.)  https://github.com/warmcat/libwebsockets/tree/v3.2-stable
 2. Read the READMEs/README.build.md
@@ -26,8 +39,19 @@ This file contains instructions for building the libwebsockets third party libra
    It will fail all of the configurations that require DLLS, but the libwebsockets_static.lib will get generated and the
    include files.
 
-7. Copy the include files generated in the d:\inst to the include folder.
+7. Copy the include files generated in the d:\inst to the Win64/include folder.
 
-8. copy the libwebsockets_static.lib to the lib folder.  For 4.22 it is called libwebsocket_static422, because
+8. copy the libwebsockets_static.lib to the Win64/lib folder.  For 4.22 it is called libwebsocket_static422, because
    4.22 contains a different openssl third party library and linking needs to match
 
+## Android
+
+Building the android libraries is best done on linux.  Using for example the Windows Subsystem for Linux, a developer can install Ubuntu on his windows machine and the Android development kit.
+
+1. Install the latest android NDK, e.g. android_ndk_r21
+2. get the sources for openess-1.0.1s
+3. get the correct branch of libwebsockets, 3.2, that you want to use.
+4. Run the script, build_android.sh, which is in this folder.
+5. Copy the include files and the libraries, minus the .so files (not required) into the include/Android and lib/Android folders in the plugin.
+
+Look at the script file for more details.  Notice that we select the API level 19, it must not be higher than the target API level used to build the Unreal project.  For ARM64, 19 is actually turned to 21 which is the minumum platform for that architecture, 19 is used for armv7 code.
