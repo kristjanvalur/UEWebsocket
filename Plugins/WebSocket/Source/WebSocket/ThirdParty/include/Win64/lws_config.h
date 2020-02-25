@@ -17,7 +17,7 @@
 #define LWS_MAX_SMP 1
 
 /* #undef LWS_AVOID_SIGPIPE_IGN */
-#define LWS_BUILD_HASH "v3.2.0-40-ge9732647"
+#define LWS_BUILD_HASH "v3.2.0-41-gc0accc95"
 #define LWS_BUILTIN_GETIFADDRS
 /* #undef LWS_FALLBACK_GETHOSTBYNAME */
 #define LWS_HAS_INTPTR_T
@@ -119,8 +119,8 @@
 /* #undef LWS_WITH_MINIZ */
 #define LWS_WITH_NETWORK
 /* #undef LWS_WITH_NO_LOGS */
-/* extra logging for kards /*
-#define LWS_WITH_MORE_LOGS
+/* extra logging for kards */
+/* #undef LWS_WITH_MORE_LOGS */
 /* #undef LWS_WITHOUT_CLIENT */
 #define LWS_WITHOUT_EXTENSIONS
 /* #undef LWS_WITHOUT_SERVER */
