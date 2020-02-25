@@ -79,6 +79,11 @@ public class WebSocket : ModuleRules
 			}
 			);
 
+        if(int.Parse(EngineMinorVersion) > 23)
+        {
+            PublicDefinitions.Add("PLATFORM_HTML5=0");
+        }
+		
         // This file is changed from the official version.
         // It is assumes that we have a libwebsocket_static422.lib which has been compiled against the 4.22
         // version of the openssl third party libs.
@@ -87,8 +92,16 @@ public class WebSocket : ModuleRules
         {
             PublicDefinitions.Add("PLATFORM_UWP=0");
             PrivateDependencyModuleNames.Add("zlib");
-            // kards change, also 22
-            if (EngineMinorVersion == "22" || EngineMinorVersion == "21" || EngineMinorVersion == "20")
+			
+			// OpenSSL versions provided with UE4 for windows
+			// We have compiled the libwebsockets libs to use the same as the engine uses.
+			// for 4.22+
+			// 4.24 1.1.1c
+			// 4.22+ 1.1.1
+			// 4.14+ 1.0.2h
+			
+            // kards change, also 22, 23, 24
+            if (Int32.Parse(EngineMinorVersion) >= 20)
             {
                 PrivateDependencyModuleNames.Add("OpenSSL");
             }
@@ -109,24 +122,12 @@ public class WebSocket : ModuleRules
                     PublicAdditionalLibraries.Add(Lib);
                 }
             }
-            else if(EngineMinorVersion == "22" || EngineMinorVersion == "23")
+            /*else if(EngineMinorVersion == "22" || EngineMinorVersion == "23")*/
+            else
             {
-
+				// use this library, compatible with the OpenSSL module in the engine.
                 PublicAdditionalLibraries.Add("websockets_static422.lib");
-                // for 4.22 and 4.23
-                if (false) // disabled for 1939 games
-                {
-                if (Target.Type == TargetType.Editor)
-                {
-                    PublicAdditionalLibraries.Add("websockets_static422.lib");
-                    PublicAdditionalLibraries.Add("libeay32.lib");
-                    PublicAdditionalLibraries.Add("ssleay32.lib");
-                }
-                else
-                {
-                    PublicAdditionalLibraries.Add("websockets_game_static422.lib");
-                }
-                }
+               
 
             }
 
@@ -156,7 +157,8 @@ public class WebSocket : ModuleRules
                     PublicAdditionalLibraries.Add(Lib);
                 }
             }
-            else if(EngineMinorVersion == "22"|| EngineMinorVersion == "23")
+            /*else if(EngineMinorVersion == "22"|| EngineMinorVersion == "23")*/
+            else
             {
                 string[] StaticLibrariesX32 = new string[] {
                     "websockets_static422.lib",
@@ -170,7 +172,7 @@ public class WebSocket : ModuleRules
                 }
             }
         }
-        else if(Target.Platform == UnrealTargetPlatform.HTML5)
+        /*else if(Target.Platform == UnrealTargetPlatform.HTML5)
         {
             PublicDefinitions.Add("PLATFORM_UWP=0");
             string strStaticPath = Path.GetFullPath(Path.Combine(ModulePath, "ThirdParty/lib/HTML5/"));
@@ -184,7 +186,7 @@ public class WebSocket : ModuleRules
             {
                 PublicAdditionalLibraries.Add(strStaticPath + Lib);
             }
-        }
+        }*/
         else if(Target.Platform == UnrealTargetPlatform.Mac)
         {
             PublicDefinitions.Add("PLATFORM_UWP=0");
@@ -211,13 +213,21 @@ public class WebSocket : ModuleRules
             string strStaticPath = Path.GetFullPath(Path.Combine(ModulePath, "ThirdParty/lib/Linux/"));
             PublicLibraryPaths.Add(strStaticPath);
 
-            string[] StaticLibrariesMac = new string[] {
-                "libwebsockets.a",
-                //"libssl.a",
-                //"libcrypto.a"
-            };
-            
-            foreach (string Lib in StaticLibrariesMac)
+            string[] StaticLibrariesLinux = null;
+            if (int.Parse(EngineMinorVersion) >= 24)
+            {
+                StaticLibrariesLinux = new string[] {
+                    "libwebsockets424.a",
+                };
+            }
+            else
+            {
+                StaticLibrariesLinux = new string[] {
+                    "libwebsockets.a",
+                };
+            }
+
+            foreach (string Lib in StaticLibrariesLinux)
             {
                 PublicAdditionalLibraries.Add(Path.Combine(strStaticPath, Lib));
             }
@@ -226,6 +236,7 @@ public class WebSocket : ModuleRules
         {
             PublicDefinitions.Add("PLATFORM_UWP=0");
             PrivateIncludePaths.Add("WebSocket/ThirdParty/include/IOS");
+            PrivateDependencyModuleNames.Add("OpenSSL");
 
             string PluginPath = Utils.MakePathRelativeTo(ModuleDirectory, Target.RelativeEnginePath + "/Source/");
             PluginPath = PluginPath.Replace("\\", "/");
@@ -235,8 +246,8 @@ public class WebSocket : ModuleRules
 
             string[] StaticLibrariesIOS = new string[] {
                 "websockets",
-                "ssl",
-                "crypto"
+                //"ssl",
+                //"crypto"
             };
 
             foreach (string Lib in StaticLibrariesIOS)
@@ -255,17 +266,23 @@ public class WebSocket : ModuleRules
             string strStaticArm64Path = Path.GetFullPath(Path.Combine(ModulePath, "ThirdParty/lib/Android/arm64-v8a"));
             PublicLibraryPaths.Add(strStaticArm64Path);
 
+			// openssl provided by ue4 for android:
+			// 4.23 1.0.1s, part of libcurl
 
+			PrivateDependencyModuleNames.Add("OpenSSL");
             string[] StaticLibrariesAndroid = new string[] {
                 "websockets",
-                "ssl",
-                "crypto"
+            //    "ssl",
+            //    "crypto"
             };
 
             foreach (string Lib in StaticLibrariesAndroid)
             {
                 PublicAdditionalLibraries.Add(Lib);
             }
+
+            string PluginPath = Utils.MakePathRelativeTo(ModuleDirectory, Target.RelativeEnginePath);
+            AdditionalPropertiesForReceipt.Add("AndroidPlugin", Path.Combine(PluginPath, "WebSocket_UPL.xml"));
         }
     }
 

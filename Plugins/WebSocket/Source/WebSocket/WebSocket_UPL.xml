@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+
+<root xmlns:android="http://schemas.android.com/apk/res/android">
+	<!-- init section is always evaluated once per architecture -->
+	<init>
+		
+	</init>
+
+	
+	<!-- optional files or directories to copy to Intermediate/Android/APK -->
+	<gradleCopies>
+     
+
+    
+      <copyDir src="$S(PluginDir)/ThirdParty/Android/Java"
+					dst = "$S(BuildDir)/src" />
+    
+      <copyDir src="$S(PluginDir)/ThirdParty/Android/Java"
+					dst = "$S(BuildDir)/gradle/app/src/main/java" />
+    
+      <copyDir src="$S(PluginDir)/ThirdParty/Android/permission_library"
+					dst="$S(BuildDir)/JavaLibs/permission_library" />
+    
+      <copyDir src="$S(PluginDir)/ThirdParty/Android/permission_library"
+					dst="$S(BuildDir)/gradle/permission_library" />
+      
+	</gradleCopies>
+
+  
+  
+	
+	<!-- Files to copy before the build so they can be used in the build -->
+	<prebuildCopies>
+	    
+	</prebuildCopies>
+  
+  <gradleProperties> 
+      <insert>
+        android.useAndroidX=true
+        android.enableJetifier=true
+      </insert>
+  </gradleProperties>
+
+  
+</root>
