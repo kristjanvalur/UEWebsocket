@@ -24,17 +24,18 @@
 #include "UObject/NoExportTypes.h"
 #include "Tickable.h"
 
+// openssl (included by lws) has a struct called UI which conflicts with UE4. Redefine it.
+#define UI UI_ST
 #if PLATFORM_UWP
 #elif PLATFORM_HTML5
 #elif PLATFORM_WINDOWS  
 #include "PreWindowsApi.h"
-#define UI UI_ST
 #include "libwebsockets.h"
-#undef UI
 #include "PostWindowsApi.h" 
 #else
 #include "libwebsockets.h"
 #endif
+#undef UI
 
 #include <iostream>
 
