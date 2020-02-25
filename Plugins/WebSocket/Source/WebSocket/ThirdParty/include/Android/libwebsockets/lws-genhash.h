@@ -21,7 +21,7 @@
  * included from libwebsockets.h
  */
 
-/*! \defgroup generic hash
+/*! \defgroup generichash Generic Hash
  * ## Generic Hash related functions
  *
  * Lws provides generic hash / digest accessors that abstract the ones
@@ -34,6 +34,7 @@
 
 enum lws_genhash_types {
 	LWS_GENHASH_TYPE_UNKNOWN,
+	LWS_GENHASH_TYPE_MD5,
 	LWS_GENHASH_TYPE_SHA1,
 	LWS_GENHASH_TYPE_SHA256,
 	LWS_GENHASH_TYPE_SHA384,
@@ -53,7 +54,8 @@ struct lws_genhash_ctx {
         uint8_t type;
 #if defined(LWS_WITH_MBEDTLS)
         union {
-		mbedtls_sha1_context sha1;
+		mbedtls_md5_context md5;
+        	mbedtls_sha1_context sha1;
 		mbedtls_sha256_context sha256;
 		mbedtls_sha512_context sha512; /* 384 also uses this */
 		const mbedtls_md_info_t *hmac;
@@ -70,8 +72,12 @@ struct lws_genhmac_ctx {
 	const mbedtls_md_info_t *hmac;
 	mbedtls_md_context_t ctx;
 #else
-        const EVP_MD *evp_type;
-        EVP_MD_CTX *ctx;
+	const EVP_MD *evp_type;
+#if defined(LWS_HAVE_HMAC_CTX_new)
+        HMAC_CTX *ctx;
+#else
+        HMAC_CTX ctx;
+#endif
 #endif
 };
 

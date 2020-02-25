@@ -100,8 +100,6 @@ typedef int ASN1_BOOLEAN;
 typedef int ASN1_NULL;
 # endif
 
-typedef struct asn1_object_st ASN1_OBJECT;
-
 typedef struct ASN1_ITEM_st ASN1_ITEM;
 typedef struct asn1_pctx_st ASN1_PCTX;
 
@@ -169,7 +167,7 @@ typedef struct conf_st CONF;
 typedef struct store_st STORE;
 typedef struct store_method_st STORE_METHOD;
 
-//typedef struct ui_st UI;
+typedef struct ui_st UI;
 typedef struct ui_method_st UI_METHOD;
 
 typedef struct st_ERR_FNS ERR_FNS;

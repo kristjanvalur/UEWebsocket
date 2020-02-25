@@ -43,7 +43,7 @@ typedef enum {
 	LPE_FAILED_UNEXPECTED_PASS,
 	LPE_FAILED_UNEXPECTED_CLOSE,
 	LPE_SKIPPED,
-	LPE_CLOSING,
+	LPE_CLOSING
 } lws_unit_test_packet_disposition;
 
 typedef int (*lws_unit_test_packet_test_cb)(const void *cb_user, int disposition);
@@ -72,3 +72,7 @@ enum {
 	LTMI_PEER_V_EXPECT_RESULT_CB,			/* u.value */
 	LTMI_PEER_V_EXPECT_RESULT_CB_ARG,		/* u.value */
 };
+
+LWS_VISIBLE LWS_EXTERN const char *
+lws_unit_test_result_name(int in);
+

@@ -171,6 +171,14 @@
  * doubly linked-list
  */
 
+#if defined (LWS_WITH_DEPRECATED_LWS_DLL)
+
+/*
+ * This is going away in v4.1.  You can set the cmake option above to keep it
+ * around temporarily.  Migrate your stuff to the more capable and robust
+ * lws_dll2 below
+ */
+
 struct lws_dll {
 	struct lws_dll *prev;
 	struct lws_dll *next;
@@ -219,6 +227,7 @@ lws_dll_foreach_safe(struct lws_dll *phead, void *user,
 #define lws_dll_is_detached(___dll, __head) \
 	(!(___dll)->prev && !(___dll)->next && (__head)->prev != (___dll))
 
+#endif
 
 /*
  * lws_dll2_owner / lws_dll2 : more capable version of lws_dll.  Differences:
@@ -285,8 +294,19 @@ lws_dll2_clear(struct lws_dll2 *d);
 LWS_VISIBLE LWS_EXTERN void
 lws_dll2_owner_clear(struct lws_dll2_owner *d);
 
-void
+LWS_VISIBLE LWS_EXTERN void
 lws_dll2_add_before(struct lws_dll2 *d, struct lws_dll2 *after);
+
+LWS_VISIBLE LWS_EXTERN void
+lws_dll2_add_sorted(lws_dll2_t *d, lws_dll2_owner_t *own,
+		    int (*compare)(const lws_dll2_t *d, const lws_dll2_t *i));
+
+#if defined(_DEBUG)
+void
+lws_dll2_describe(struct lws_dll2_owner *owner, const char *desc);
+#else
+#define lws_dll2_describe(x, y)
+#endif
 
 /*
  * these are safe against the current container object getting deleted,
@@ -327,7 +347,7 @@ struct lws_buflist;
  * Returns -1 on OOM, 1 if this was the first segment on the list, and 0 if
  * it was a subsequent segment.
  */
-LWS_VISIBLE LWS_EXTERN int
+LWS_VISIBLE LWS_EXTERN int LWS_WARN_UNUSED_RESULT
 lws_buflist_append_segment(struct lws_buflist **head, const uint8_t *buf,
 			   size_t len);
 /**
@@ -556,26 +576,6 @@ lws_now_secs(void);
  */
 LWS_VISIBLE LWS_EXTERN lws_usec_t
 lws_now_usecs(void);
-
-/**
- * lws_compare_time_t(): return relationship between two time_t
- *
- * \param context: struct lws_context
- * \param t1: time_t 1
- * \param t2: time_t 2
- *
- * returns <0 if t2 > t1; >0 if t1 > t2; or == 0 if t1 == t2.
- *
- * This is aware of clock discontiguities that may have affected either t1 or
- * t2 and adapts the comparison for them.
- *
- * For the discontiguity detection to work, you must avoid any arithmetic on
- * the times being compared.  For example to have a timeout that triggers
- * 15s from when it was set, store the time it was set and compare like
- * `if (lws_compare_time_t(context, now, set_time) > 15)`
- */
-LWS_VISIBLE LWS_EXTERN int
-lws_compare_time_t(struct lws_context *context, time_t t1, time_t t2);
 
 /**
  * lws_get_context - Allow getting lws_context from a Websocket connection
@@ -846,6 +846,7 @@ LWS_VISIBLE LWS_EXTERN int
 lws_is_ssl(struct lws *wsi);
 /**
  * lws_is_cgi() - find out if this wsi is running a cgi process
+ *
  * \param wsi: lws connection
  */
 LWS_VISIBLE LWS_EXTERN int
@@ -854,9 +855,8 @@ lws_is_cgi(struct lws *wsi);
 /**
  * lws_open() - platform-specific wrapper for open that prepares the fd
  *
- * \param file: the filepath to open
- * \param oflag: option flags
- * \param mode: optional mode of any created file
+ * \param __file: the filepath to open
+ * \param __oflag: option flags
  *
  * This is a wrapper around platform open() that sets options on the fd
  * according to lws policy.  Currently that is FD_CLOEXEC to stop the opened
@@ -888,5 +888,39 @@ lws_get_ssl(struct lws *wsi);
 
 LWS_VISIBLE LWS_EXTERN void
 lws_explicit_bzero(void *p, size_t len);
+
+typedef struct lws_humanize_unit {
+	const char *name; /* array ends with NULL name */
+	uint64_t factor;
+} lws_humanize_unit_t;
+
+LWS_VISIBLE LWS_EXTERN const lws_humanize_unit_t humanize_schema_si[];
+LWS_VISIBLE LWS_EXTERN const lws_humanize_unit_t humanize_schema_si_bytes[];
+LWS_VISIBLE LWS_EXTERN const lws_humanize_unit_t humanize_schema_us[];
+
+/**
+ * lws_humanize() - Convert possibly large number to himan-readable uints
+ *
+ * \param buf: result string buffer
+ * \param len: remaining length in \p buf
+ * \param value: the uint64_t value to represent
+ * \param schema: and array of scaling factors and units
+ *
+ * This produces a concise string representation of \p value, referening the
+ * schema \p schema of scaling factors and units to find the smallest way to
+ * render it.
+ *
+ * Three schema are exported from lws for general use, humanize_schema_si, which
+ * represents as, eg, "  22.130Gi" or " 128      "; humanize_schema_si_bytes
+ * which is the same but shows, eg, "  22.130GiB", and humanize_schema_us,
+ * which represents a count of us as a human-readable time like "  14.350min",
+ * or "  1.500d".
+ *
+ * You can produce your own schema.
+ */
+
+LWS_VISIBLE LWS_EXTERN int
+lws_humanize(char *buf, int len, uint64_t value,
+	     const lws_humanize_unit_t *schema);
 
 ///@}

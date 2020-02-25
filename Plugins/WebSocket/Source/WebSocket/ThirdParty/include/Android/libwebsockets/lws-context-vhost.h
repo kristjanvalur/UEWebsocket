@@ -208,6 +208,10 @@ enum lws_context_options {
 	 * already in use, a null value shall be return to signal the error.
 	 */
 
+	LWS_SERVER_OPTION_H2_JUST_FIX_WINDOW_UPDATE_OVERFLOW	= (1 << 31),
+	/**< (VH) Indicates the connections using this vhost should ignore
+	 * h2 WINDOW_UPDATE from broken peers and fix them up */
+
 	/****** add new things just above ---^ ******/
 };
 
@@ -669,6 +673,9 @@ struct lws_context_creation_info {
 	 * on a unix socket, you can give a "username:groupname" string here
 	 * to control the owner:group it's created with.  It's always created
 	 * with 0660 mode. */
+	const lws_system_ops_t *system_ops;
+	/**< CONTEXT: hook up lws_system_ apis to system-specific
+	 * implementations */
 
 	/* Add new things just above here ---^
 	 * This is part of the ABI, don't needlessly break compatibility
@@ -889,6 +896,17 @@ lws_get_vhost(struct lws *wsi);
  */
 LWS_VISIBLE LWS_EXTERN const char *
 lws_get_vhost_name(struct lws_vhost *vhost);
+
+/**
+ * lws_get_vhost_by_name() - returns the vhost with the requested name, or NULL
+ *
+ * \param context: the lws_context to look in
+ * \param name: vhost name we are looking for
+ *
+ * Returns NULL, or the vhost with the name \p name
+ */
+LWS_VISIBLE LWS_EXTERN struct lws_vhost *
+lws_get_vhost_by_name(struct lws_context *context, const char *name);
 
 /**
  * lws_get_vhost_port() - returns the port a vhost listens on, or -1
