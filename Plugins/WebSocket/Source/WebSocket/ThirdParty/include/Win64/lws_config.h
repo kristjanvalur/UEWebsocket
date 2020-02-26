@@ -9,7 +9,7 @@
 #define LWS_INSTALL_DATADIR "D:/inst/share"
 #define LWS_LIBRARY_VERSION_MAJOR 3
 #define LWS_LIBRARY_VERSION_MINOR 2
-#define LWS_LIBRARY_VERSION_PATCH 0
+#define LWS_LIBRARY_VERSION_PATCH 2
 /* LWS_LIBRARY_VERSION_NUMBER looks like 1005001 for e.g. version 1.5.1 */
 #define LWS_LIBRARY_VERSION_NUMBER (LWS_LIBRARY_VERSION_MAJOR * 1000000) + \
 					(LWS_LIBRARY_VERSION_MINOR * 1000) + \
@@ -17,7 +17,7 @@
 #define LWS_MAX_SMP 1
 
 /* #undef LWS_AVOID_SIGPIPE_IGN */
-#define LWS_BUILD_HASH "v3.2.0-41-gc0accc95"
+#define LWS_BUILD_HASH "v3.2.2-13-gd0fcbc2b"
 #define LWS_BUILTIN_GETIFADDRS
 /* #undef LWS_FALLBACK_GETHOSTBYNAME */
 #define LWS_HAS_INTPTR_T
@@ -72,7 +72,7 @@
 #define LWS_HAVE_X509_get_key_usage
 #define LWS_HAVE_X509_VERIFY_PARAM_set1_host
 /* #undef LWS_LATENCY */
-#define LWS_LIBRARY_VERSION "3.2.0"
+#define LWS_LIBRARY_VERSION "3.2.2"
 /* #undef LWS_MINGW_SUPPORT */
 /* #undef LWS_NO_CLIENT */
 #define LWS_NO_DAEMONIZE
@@ -120,7 +120,7 @@
 #define LWS_WITH_NETWORK
 /* #undef LWS_WITH_NO_LOGS */
 /* extra logging for kards */
-/* #undef LWS_WITH_MORE_LOGS */
+#define LWS_WITH_MORE_LOGS
 /* #undef LWS_WITHOUT_CLIENT */
 #define LWS_WITHOUT_EXTENSIONS
 /* #undef LWS_WITHOUT_SERVER */
