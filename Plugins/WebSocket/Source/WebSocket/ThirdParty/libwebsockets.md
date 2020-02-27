@@ -33,6 +33,7 @@ Ready made scripts, perhaps requiring slight modifications, are in the `script` 
    - execute cmake, here are the options:
    - -G "Visual Studio 15 Win64"  (for win64 and VS2017)
    - -DCMAKE_INSTALL_PREFIX=d:\inst  (or wherever, just not c:\Program Files\)
+   - -DLWS_WITH_MORE_LOGS=ON  (enables more log channels in relase build)
    - ..  (the source dir)
 
    Verify that CMake has found the correct verision of openssl.

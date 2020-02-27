@@ -75,6 +75,7 @@ rm -rf ${LWS_BUILD}
 mkdir -p ${LWS_BUILD}
 pushd ${LWS_BUILD}
 cmake $LWS_SRC \
+-DLWS_WITH_MORE_LOGS=ON \
 -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake  \
 -DANDROID_ABI=$ANDROID_NDK_ABI \
 -DANDROID_PLATFORM=android-$ANDROID_NDK_API \
