@@ -375,9 +375,17 @@ bool UWebSocketBase::Connect(const FString& uri, const TMap<FString, FString>& h
 		return false;
 	}
 
+#if PLATFORM_ANDROID || PLATFORM_IOS
+	// This test is not supported for openssl 1.0.1s, which is used on those platforms.
+	// If used, libwebsockets will fail.  Silently set ignore flag to true
+	bool bSkipServerCertHostnameCheck = true;
+#else
+	bool bSkipServerCertHostnameCheck = options.bSkipServerCertHostnameCheck;
+#endif
+
 	int ssl_options =
 		(options.bAllowSelfSigned ? LCCSCF_ALLOW_SELFSIGNED : 0) |
-		(options.bSkipServerCertHostnameCheck ? LCCSCF_SKIP_SERVER_CERT_HOSTNAME_CHECK : 0) |
+		(bSkipServerCertHostnameCheck ? LCCSCF_SKIP_SERVER_CERT_HOSTNAME_CHECK : 0) |
 		(options.bAllowExpired ? LCCSCF_ALLOW_EXPIRED : 0);
 		
 	int bUseSSL = false;

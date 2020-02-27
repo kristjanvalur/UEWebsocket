@@ -268,6 +268,9 @@ public class WebSocket : ModuleRules
 
 			// openssl provided by ue4 for android:
 			// 4.23 1.0.1s, part of libcurl
+			// Android apps are statically linked so we cannot have different versions of libraries
+			// in the modules.  openssl is already linked in as part of libcurl.
+			// We therefore cannot use the newer 1.1.1 series in this plugin.
 
 			PrivateDependencyModuleNames.Add("OpenSSL");
             string[] StaticLibrariesAndroid = new string[] {

@@ -4,16 +4,18 @@ This file contains instructions for building the libwebsockets third party libra
 libwebsockets depends on openssl.  Our approach is to use the same api level of openssl as UE4
 uses.  For recent windows versions, this is 1.1.1.  Android and IOS are still at level 1.0.1.
 
-libwebsockets requires the correct headers for compiling and it creates a statis library.  For linking
+libwebsockets requires the correct headers for compiling and it creates a static library.  For linking
 the plugin, placing a dependency on unreal's OpenSSL module allows us to link.
 
 The full openssl headers are present in the plugin, and also sometimes the openssl
-static libs librcypto.a and libssl.a.  These can be used, but it is probably better to link with OpenSSL.
+static libs librcypto.a and libssl.a.  These can be used, but it is probably better to link with the OpenSSL third party module in UE4.  For monolithic builds, like on Android, this is necessary since there
+cannot be more than one version of the library in the build.
 
 These instructions are how to build the openssl libs and libwebsockets libs to add to the third party libs.
 
-## Windows, 64 bits.
+Ready made scripts, perhaps requiring slight modifications, are in the `script` folder.
 
+## Windows, 64 bits.
 
 1. Get *libwebsockets* off github.  Check out the v3.2 stable branch (or whichever branch you intend to use, but this project currently uses that.)  https://github.com/warmcat/libwebsockets/tree/v3.2-stable
 2. Read the READMEs/README.build.md
@@ -51,7 +53,14 @@ Building the android libraries is best done on linux.  Using for example the Win
 1. Install the latest android NDK, e.g. android_ndk_r21
 2. get the sources for openess-1.0.1s
 3. get the correct branch of libwebsockets, 3.2, that you want to use.
-4. Run the script, build_android.sh, which is in this folder.
+4. Run the script, build_android.sh, which is in the `script` folder.  Modify it according to your local
+   setup.
 5. Copy the include files and the libraries, minus the .so files (not required) into the include/Android and lib/Android folders in the plugin.
 
 Look at the script file for more details.  Notice that we select the API level 19, it must not be higher than the target API level used to build the Unreal project.  For ARM64, 19 is actually turned to 21 which is the minumum platform for that architecture, 19 is used for armv7 code.
+
+Android apps are linked into a single executable and so the plugin must use the same openssl library
+as the engine does.  The openssl libraries are already linked in as part of libcurl,
+which is part of the engine, and actually linking with the compiled libraries isn't necessary,
+or may cause linker errors due to duplicate symbols.  If necessary for your application, change the
+WebSocket.Build.cs as required to link in the libraries or not.
