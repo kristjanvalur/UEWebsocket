@@ -120,7 +120,7 @@
 #define LWS_WITH_NETWORK
 /* #undef LWS_WITH_NO_LOGS */
 /* extra logging for kards */
-/* #undef LWS_WITH_MORE_LOGS */
+#define LWS_WITH_MORE_LOGS
 /* #undef LWS_WITHOUT_CLIENT */
 #define LWS_WITHOUT_EXTENSIONS
 /* #undef LWS_WITHOUT_SERVER */
