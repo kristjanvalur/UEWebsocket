@@ -232,7 +232,7 @@ public class WebSocket : ModuleRules
                 PublicAdditionalLibraries.Add(Path.Combine(strStaticPath, Lib));
             }
         }
-        else if(Target.Platform == UnrealTargetPlatform.IOS)
+        else if(false && Target.Platform == UnrealTargetPlatform.IOS)
         {
             PublicDefinitions.Add("PLATFORM_UWP=0");
             PrivateIncludePaths.Add("WebSocket/ThirdParty/include/IOS");
@@ -256,7 +256,26 @@ public class WebSocket : ModuleRules
                 PublicAdditionalShadowFiles.Add(Path.Combine(strStaticPath, "lib" + Lib + ".a") );
             }
         }
-        else if(Target.Platform == UnrealTargetPlatform.Android)
+        else if(Target.Platform == UnrealTargetPlatform.IOS)
+        {
+            PublicDefinitions.Add("PLATFORM_UWP=0");
+            // libwebsockets and openssl are provided by ue4
+            // UE4.23:  libwebsockets 3.0.0, openssl 1.0.1s
+            
+            // Just use the libwebsockets built into UE4
+            PrivateIncludePathModuleNames.AddRange(
+                new string[] 
+                {
+                    "libWebSockets",
+                }
+            );
+            AddEngineThirdPartyPrivateStaticDependencies(Target, "libWebSockets");
+            AddEngineThirdPartyPrivateStaticDependencies(Target, "OpenSSL");
+
+            string PluginPath = Utils.MakePathRelativeTo(ModuleDirectory, Target.RelativeEnginePath);
+            AdditionalPropertiesForReceipt.Add("AndroidPlugin", Path.Combine(PluginPath, "WebSocket_UPL.xml"));
+        }
+        else if(false && Target.Platform == UnrealTargetPlatform.Android)
         {
             PublicDefinitions.Add("PLATFORM_UWP=0");
             PrivateIncludePaths.Add("WebSocket/ThirdParty/include/Android");
@@ -283,6 +302,25 @@ public class WebSocket : ModuleRules
             {
                 PublicAdditionalLibraries.Add(Lib);
             }
+
+            string PluginPath = Utils.MakePathRelativeTo(ModuleDirectory, Target.RelativeEnginePath);
+            AdditionalPropertiesForReceipt.Add("AndroidPlugin", Path.Combine(PluginPath, "WebSocket_UPL.xml"));
+        }
+		else if(Target.Platform == UnrealTargetPlatform.Android)
+        {
+            PublicDefinitions.Add("PLATFORM_UWP=0");
+            // libwebsockets and openssl are provided by ue4 for Android
+            // UE4.23:  libwebsockets 3.0.0, openssl 1.0.1s
+            
+            // Just use the libwebsockets built into UE4
+            PrivateIncludePathModuleNames.AddRange(
+                new string[] 
+                {
+                    "libWebSockets",
+                }
+            );
+            AddEngineThirdPartyPrivateStaticDependencies(Target, "libWebSockets");
+            AddEngineThirdPartyPrivateStaticDependencies(Target, "OpenSSL");
 
             string PluginPath = Utils.MakePathRelativeTo(ModuleDirectory, Target.RelativeEnginePath);
             AdditionalPropertiesForReceipt.Add("AndroidPlugin", Path.Combine(PluginPath, "WebSocket_UPL.xml"));
