@@ -37,6 +37,9 @@
 #endif
 #undef UI
 
+// see if we are 3.2 or greater
+#define LWS_LIBRARY_VERSION_32_PLUS (LWS_LIBRARY_VERSION_MAJOR > 3 || (LWS_LIBRARY_VERSION_MAJOR == 3 && LWS_LIBRARY_VERSION_MINOR >= 2))
+
 #include <iostream>
 
 #include "WebSocketBase.h"

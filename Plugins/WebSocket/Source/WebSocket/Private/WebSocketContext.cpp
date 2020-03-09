@@ -302,7 +302,13 @@ void UWebSocketContext::Tick(float DeltaTime)
 	if (mlwsContext != nullptr)
 	{
 		// polling service, don't block.
+		
+#if LWS_LIBRARY_VERSION_32_PLUS
+		// poll in 3.2 works differently than before
 		lws_service(mlwsContext, -1);
+#else
+		lws_service(mlwsContext, 0);
+#endif
 	}
 #endif
 }
@@ -332,7 +338,9 @@ void UWebSocketContext::SetLogLevel(int32 level)
 	if (level & (1 << (int)(EWebSocketLogLevel::CLIENT))) log_level |= LLL_CLIENT;
 	if (level & (1 << (int)(EWebSocketLogLevel::LATENCY))) log_level |= LLL_LATENCY;
 	if (level & (1 << (int)(EWebSocketLogLevel::USER))) log_level |= LLL_USER;
+#if LWS_LIBRARY_VERSION_MINOR > 0
 	if (level & (1 << (int)(EWebSocketLogLevel::THREAD))) log_level |= LLL_THREAD;
+#endif
 
 	lws_set_log_level(log_level, log_handler);
 }

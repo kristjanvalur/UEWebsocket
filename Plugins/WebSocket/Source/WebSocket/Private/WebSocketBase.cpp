@@ -531,11 +531,22 @@ void UWebSocketBase::ProcessWriteable()
 		lws_write(mlws, &entry.data[LWS_PRE], entry.datalen, entry.binary ? LWS_WRITE_BINARY : LWS_WRITE_TEXT);
 
 		mSendQueue.RemoveNode(mSendQueue.GetHead(), true);
+
+#if LWS_LIBRARY_VERSION_32_PLUS
+		// 3.2 and higher can do multiple writes per callback
+		// but stop if the last write was buffered
 		if (mSendQueue.Num() > 0 && lws_partial_buffered(mlws))
 		{
 			lws_callback_on_writable(mlws);
 			return;
 		}
+#else
+		if (mSendQueue.Num() > 0)
+		{
+			lws_callback_on_writable(mlws);
+		}
+		return;
+#endif
 	}
 #endif
 }
@@ -623,7 +634,3 @@ void UWebSocketBase::Cleanlws()
 	closing = false;
 #endif
 }
-
-
-
-
