@@ -88,6 +88,9 @@ public class WebSocket : ModuleRules
         // It is assumes that we have a libwebsocket_static422.lib which has been compiled against the 4.22
         // version of the openssl third party libs.
 
+        // should we use ue4 provided lws and openssl?
+        bool UseDefaultLibs = false;
+
         if (Target.Platform == UnrealTargetPlatform.Win64)
         {
             PublicDefinitions.Add("PLATFORM_UWP=0");
@@ -187,7 +190,7 @@ public class WebSocket : ModuleRules
                 PublicAdditionalLibraries.Add(strStaticPath + Lib);
             }
         }*/
-        else if(Target.Platform == UnrealTargetPlatform.Mac)
+        else if(false && Target.Platform == UnrealTargetPlatform.Mac)
         {
             PublicDefinitions.Add("PLATFORM_UWP=0");
             PrivateIncludePaths.Add("WebSocket/ThirdParty/include/Mac");
@@ -205,7 +208,7 @@ public class WebSocket : ModuleRules
                 PublicAdditionalLibraries.Add(Path.Combine(strStaticPath, Lib) );
             }
         }
-        else if (Target.Platform == UnrealTargetPlatform.Linux)
+        else if (false && Target.Platform == UnrealTargetPlatform.Linux)
         {
             PublicDefinitions.Add("PLATFORM_UWP=0");
             PrivateDependencyModuleNames.Add("OpenSSL");
@@ -256,25 +259,6 @@ public class WebSocket : ModuleRules
                 PublicAdditionalShadowFiles.Add(Path.Combine(strStaticPath, "lib" + Lib + ".a") );
             }
         }
-        else if(Target.Platform == UnrealTargetPlatform.IOS)
-        {
-            PublicDefinitions.Add("PLATFORM_UWP=0");
-            // libwebsockets and openssl are provided by ue4
-            // UE4.23:  libwebsockets 3.0.0, openssl 1.0.1s
-            
-            // Just use the libwebsockets built into UE4
-            PrivateIncludePathModuleNames.AddRange(
-                new string[] 
-                {
-                    "libWebSockets",
-                }
-            );
-            AddEngineThirdPartyPrivateStaticDependencies(Target, "libWebSockets");
-            AddEngineThirdPartyPrivateStaticDependencies(Target, "OpenSSL");
-
-            string PluginPath = Utils.MakePathRelativeTo(ModuleDirectory, Target.RelativeEnginePath);
-            AdditionalPropertiesForReceipt.Add("AndroidPlugin", Path.Combine(PluginPath, "WebSocket_UPL.xml"));
-        }
         else if(false && Target.Platform == UnrealTargetPlatform.Android)
         {
             PublicDefinitions.Add("PLATFORM_UWP=0");
@@ -308,11 +292,35 @@ public class WebSocket : ModuleRules
         }
 		else if(Target.Platform == UnrealTargetPlatform.Android)
         {
+            string PluginPath = Utils.MakePathRelativeTo(ModuleDirectory, Target.RelativeEnginePath);
+            AdditionalPropertiesForReceipt.Add("AndroidPlugin", Path.Combine(PluginPath, "WebSocket_UPL.xml"));
+            UseDefaultLibs = True;
+        }
+        else
+        {
+            // all other platforms just use the ue4 provided libs
+            UseDefaultLibs = true;
+        }
+        if (UseDefaultLibs)
+        {
+            // compile and link with the static versions of
+            // libWebSockets that are provided with UE4.
+            // This is at least version 3.0.0 of lws.
+            // That version is quite sufficient for our purposes
+            // but contains a bug that can cause problems on
+            // windows.  Fixed in 1485db1805ffa175df5d1568f6d568822fc4fd4c
+            // (and 16e31d4fd6fa7c437bbcd013f99fcacb3bf536d7)
+
             PublicDefinitions.Add("PLATFORM_UWP=0");
-            // libwebsockets and openssl are provided by ue4 for Android
-            // UE4.23:  libwebsockets 3.0.0, openssl 1.0.1s
+            // libwebsockets and openssl are provided by ue4 
+            // UE4.23:
+            //      lws: 3.0.0 all platforms
+            //      openssl:
+            //          android, lumin: 1.0.1s
+            //          ps4: 1.0.2g
+            //          mac, IOS, windows, hololens: 1.1.1
+            //          unix: 1.1.1c
             
-            // Just use the libwebsockets built into UE4
             PrivateIncludePathModuleNames.AddRange(
                 new string[] 
                 {
@@ -321,10 +329,8 @@ public class WebSocket : ModuleRules
             );
             AddEngineThirdPartyPrivateStaticDependencies(Target, "libWebSockets");
             AddEngineThirdPartyPrivateStaticDependencies(Target, "OpenSSL");
-
-            string PluginPath = Utils.MakePathRelativeTo(ModuleDirectory, Target.RelativeEnginePath);
-            AdditionalPropertiesForReceipt.Add("AndroidPlugin", Path.Combine(PluginPath, "WebSocket_UPL.xml"));
         }
+
     }
 
     private string ReadEngineVersion(string EngineDirectory)

@@ -1,6 +1,16 @@
 # building the libwebsockets for UE4.
 This file contains instructions for building the libwebsockets third party library, which is used by UEWebsocket.
 
+Note that this is no longer deemed necessary since at least since version 4.23
+UE4 ships with libwebsockets 3.0.0 which is adequate, and with a matching
+openssl library.  Only on windows is there an issue which was later fixed
+in lws 3.2, in commits 1485db1805ffa175df5d1568f6d568822fc4fd4c and
+16e31d4fd6fa7c437bbcd013f99fcacb3bf536d7
+
+Using the provided lws and openssl makes everything simpler.  Please see
+WebSocket.Build.cs for the various include file dependencies and link
+targets.
+
 libwebsockets depends on openssl.  Our approach is to use the same api level of openssl as UE4
 uses.  For recent windows versions, this is 1.1.1.  Android and IOS are still at level 1.0.1.
 
