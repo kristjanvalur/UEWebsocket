@@ -9,6 +9,7 @@ public class UEWebsocketEditorTarget : TargetRules
     {
 		Type = TargetType.Editor;
         ExtraModuleNames.AddRange(new string[] { "UEWebsocket" });
+        DefaultBuildSettings = BuildSettingsVersion.V2;
     }
 
 }

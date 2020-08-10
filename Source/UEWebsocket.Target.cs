@@ -9,5 +9,6 @@ public class UEWebsocketTarget : TargetRules
     {
 		Type = TargetType.Game;
         ExtraModuleNames.AddRange(new string[] { "UEWebsocket" });
+        DefaultBuildSettings = BuildSettingsVersion.V2;
     }
 }
