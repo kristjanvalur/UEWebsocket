@@ -111,30 +111,20 @@ public class WebSocket : ModuleRules
 
             PrivateIncludePaths.Add("WebSocket/ThirdParty/include/Win64");
             string strStaticPath = Path.GetFullPath(Path.Combine(ModulePath, "ThirdParty/lib/Win64/"));
-            PublicLibraryPaths.Add(strStaticPath);
-
-            // for 4.21
-            if(EngineMinorVersion == "21" || EngineMinorVersion == "20")
-            {
-                string[] StaticLibrariesX64 = new string[] {
-                "websockets_static.lib",
-                };
-
-                foreach (string Lib in StaticLibrariesX64)
-                {
-                    PublicAdditionalLibraries.Add(Lib);
-                }
-            }
-            /*else if(EngineMinorVersion == "22" || EngineMinorVersion == "23")*/
-            else
-            {
-				// use this library, compatible with the OpenSSL module in the engine.
-                PublicAdditionalLibraries.Add("websockets_static422.lib");
-               
-
-            }
-
             
+            string[] StaticLibrariesX64 = new string[] {
+            #if UE_4_22_OR_LATER
+			// use this library, compatible with the OpenSSL module in the engine.
+            "websockets_static422.lib",
+            #else
+            "websockets_static.lib",
+            #endif
+            };
+
+            foreach (string Lib in StaticLibrariesX64)
+            {
+                PublicAdditionalLibraries.Add(Path.Combine(strStaticPath, Lib));
+            }    
         }
         if (Target.Platform == UnrealTargetPlatform.Win32)
         {
@@ -144,36 +134,24 @@ public class WebSocket : ModuleRules
             PrivateIncludePaths.Add("WebSocket/ThirdParty/include/Win32");
 
             string strStaticPath = Path.GetFullPath(Path.Combine(ModulePath, "ThirdParty/lib/Win32/"));
-            PublicLibraryPaths.Add(strStaticPath);
+            
+            string[] StaticLibrariesX32 = new string[] {
+                #if UE_4_22_OR_LATER
+                "websockets_static422.lib",
+                //"libcrypto.lib",
+                //"libssl.lib",#else
+                #else
+                "websockets_static.lib",
+                //"libcrypto.lib",
+                //"libssl.lib",
+                #endif
+            };
 
-            // 4.22 and 4.21
-            if (EngineMinorVersion == "21" || EngineMinorVersion == "20")
+            foreach (string Lib in StaticLibrariesX32)
             {
-                string[] StaticLibrariesX32 = new string[] {
-                    "websockets_static.lib",
-                    //"libcrypto.lib",
-                    //"libssl.lib",
-                };
-
-                foreach (string Lib in StaticLibrariesX32)
-                {
-                    PublicAdditionalLibraries.Add(Lib);
-                }
+                PublicAdditionalLibraries.Add(Path.Combine(strStaticPath, Lib));
             }
-            /*else if(EngineMinorVersion == "22"|| EngineMinorVersion == "23")*/
-            else
-            {
-                string[] StaticLibrariesX32 = new string[] {
-                    "websockets_static422.lib",
-                    //"libcrypto.lib",
-                    //"libssl.lib",
-                };
-
-                foreach (string Lib in StaticLibrariesX32)
-                {
-                    PublicAdditionalLibraries.Add(Lib);
-                }
-            }
+        
         }
         /*else if(Target.Platform == UnrealTargetPlatform.HTML5)
         {
@@ -190,7 +168,10 @@ public class WebSocket : ModuleRules
                 PublicAdditionalLibraries.Add(strStaticPath + Lib);
             }
         }*/
-        else if(false && Target.Platform == UnrealTargetPlatform.Mac)
+
+#if false // use engine websocket libs for these platforms
+
+        else if(Target.Platform == UnrealTargetPlatform.Mac)
         {
             PublicDefinitions.Add("PLATFORM_UWP=0");
             PrivateIncludePaths.Add("WebSocket/ThirdParty/include/Mac");
@@ -208,14 +189,13 @@ public class WebSocket : ModuleRules
                 PublicAdditionalLibraries.Add(Path.Combine(strStaticPath, Lib) );
             }
         }
-        else if (false && Target.Platform == UnrealTargetPlatform.Linux)
+        else if (Target.Platform == UnrealTargetPlatform.Linux)
         {
             PublicDefinitions.Add("PLATFORM_UWP=0");
             PrivateDependencyModuleNames.Add("OpenSSL");
             PrivateIncludePaths.Add("WebSocket/ThirdParty/include/Linux");
             string strStaticPath = Path.GetFullPath(Path.Combine(ModulePath, "ThirdParty/lib/Linux/"));
-            PublicLibraryPaths.Add(strStaticPath);
-
+            
             string[] StaticLibrariesLinux = null;
             if (int.Parse(EngineMinorVersion) >= 24)
             {
@@ -235,7 +215,7 @@ public class WebSocket : ModuleRules
                 PublicAdditionalLibraries.Add(Path.Combine(strStaticPath, Lib));
             }
         }
-        else if(false && Target.Platform == UnrealTargetPlatform.IOS)
+        else if(Target.Platform == UnrealTargetPlatform.IOS)
         {
             PublicDefinitions.Add("PLATFORM_UWP=0");
             PrivateIncludePaths.Add("WebSocket/ThirdParty/include/IOS");
@@ -245,7 +225,7 @@ public class WebSocket : ModuleRules
             PluginPath = PluginPath.Replace("\\", "/");
 
             string strStaticPath = PluginPath + "/ThirdParty/lib/IOS/";// Path.GetFullPath(Path.Combine(ModulePath, "ThirdParty/lib/IOS/"));
-            PublicLibraryPaths.Add(strStaticPath);
+            //PublicLibraryPaths.Add(strStaticPath);
 
             string[] StaticLibrariesIOS = new string[] {
                 "websockets",
@@ -255,20 +235,18 @@ public class WebSocket : ModuleRules
 
             foreach (string Lib in StaticLibrariesIOS)
             {
-                PublicAdditionalLibraries.Add(Lib);
-                PublicAdditionalShadowFiles.Add(Path.Combine(strStaticPath, "lib" + Lib + ".a") );
+                PublicAdditionalLibraries.Add(Path.Combine(strStaticPath, Lib));
+                // warning CS0618: 'UnrealBuildTool.ModuleRules.PublicAdditionalShadowFiles' is obsolete: 'To specify files to be transferred to a remote Mac for compilation, create a [Project]/Build/Rsync/RsyncProject.txt file. See https://linux.die.net/man/1/rsync for more information about Rsync filter rules.'
+                //PublicAdditionalShadowFiles.Add(Path.Combine(strStaticPath, "lib" + Lib + ".a") );
             }
         }
-        else if(false && Target.Platform == UnrealTargetPlatform.Android)
+        else if(Target.Platform == UnrealTargetPlatform.Android)
         {
             PublicDefinitions.Add("PLATFORM_UWP=0");
             PrivateIncludePaths.Add("WebSocket/ThirdParty/include/Android");
             string strStaticPath = Path.GetFullPath(Path.Combine(ModulePath, "ThirdParty/lib/Android/armeabi-v7a"));
-            PublicLibraryPaths.Add(strStaticPath);
-
             string strStaticArm64Path = Path.GetFullPath(Path.Combine(ModulePath, "ThirdParty/lib/Android/arm64-v8a"));
-            PublicLibraryPaths.Add(strStaticArm64Path);
-
+            
 			// openssl provided by ue4 for android:
 			// 4.23 1.0.1s, part of libcurl
 			// Android apps are statically linked so we cannot have different versions of libraries
@@ -284,17 +262,19 @@ public class WebSocket : ModuleRules
 
             foreach (string Lib in StaticLibrariesAndroid)
             {
-                PublicAdditionalLibraries.Add(Lib);
+                PublicAdditionalLibraries.Add(Path.Combine(strStaticPath, Lib));
+                PublicAdditionalLibraries.Add(Path.Combine(strStaticArm64Path, Lib));
             }
 
             string PluginPath = Utils.MakePathRelativeTo(ModuleDirectory, Target.RelativeEnginePath);
             AdditionalPropertiesForReceipt.Add("AndroidPlugin", Path.Combine(PluginPath, "WebSocket_UPL.xml"));
         }
+#endif
 		else if(Target.Platform == UnrealTargetPlatform.Android)
         {
             string PluginPath = Utils.MakePathRelativeTo(ModuleDirectory, Target.RelativeEnginePath);
             AdditionalPropertiesForReceipt.Add("AndroidPlugin", Path.Combine(PluginPath, "WebSocket_UPL.xml"));
-            UseDefaultLibs = True;
+            UseDefaultLibs = true;
         }
         else
         {
@@ -313,7 +293,7 @@ public class WebSocket : ModuleRules
 
             PublicDefinitions.Add("PLATFORM_UWP=0");
             // libwebsockets and openssl are provided by ue4 
-            // UE4.23:
+            // UE4.23-4.25:
             //      lws: 3.0.0 all platforms
             //      openssl:
             //          android, lumin: 1.0.1s
