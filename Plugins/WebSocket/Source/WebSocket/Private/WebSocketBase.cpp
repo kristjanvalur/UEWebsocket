@@ -19,11 +19,12 @@
 *  MA  02110-1301  USA
 */
 
+#include "WebSocketBase.h"
 #include "WebSocket.h"
+#include "WebSocketContext.h"
+
 #include <iostream>
 #include <vector>
-#include "WebSocketBase.h"
-#include "WebSocketContext.h"
 
 #if PLATFORM_UWP
 #elif PLATFORM_HTML5

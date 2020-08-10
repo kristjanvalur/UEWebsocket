@@ -20,14 +20,15 @@
 */
 
 
+#include "WebSocketContext.h"
 #include "WebSocket.h"
 #include "WebSocketBlueprintLibrary.h"
-#include "WebSocketContext.h"
-#include "UObjectGlobals.h"
 #include "WebSocketBase.h"
+#include "UObject/UObjectGlobals.h"
 #include "Paths.h"
-#include "FileManager.h"
-#include "FileHelper.h"
+#include "HAL/FileManager.h"
+#include "Misc/Paths.h"
+#include "Misc/FileHelper.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Misc/Base64.h"
 #include <fstream>

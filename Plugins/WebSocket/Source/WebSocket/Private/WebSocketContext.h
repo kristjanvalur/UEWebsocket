@@ -29,9 +29,9 @@
 #if PLATFORM_UWP
 #elif PLATFORM_HTML5
 #elif PLATFORM_WINDOWS  
-#include "PreWindowsApi.h"
+#include "Windows/PreWindowsApi.h"
 #include "libwebsockets.h"
-#include "PostWindowsApi.h" 
+#include "Windows/PostWindowsApi.h" 
 #else
 #include "libwebsockets.h"
 #endif
