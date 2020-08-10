@@ -19,9 +19,9 @@
 *  MA  02110-1301  USA
 */
 
+#include "WebSocketBlueprintLibrary.h"
 #include "WebSocket.h"
 #include "WebSocketContext.h"
-#include "WebSocketBlueprintLibrary.h"
 #include "Runtime/Launch/Resources/Version.h"
 
 
@@ -200,7 +200,7 @@ UObject* UWebSocketBlueprintLibrary::JsonToObject(const FString& data, UClass * 
 }
 
 
-bool UWebSocketBlueprintLibrary::JsonValueToUProperty(TSharedPtr<FJsonValue> JsonValue, UProperty* Property, void* OutValue, int64 CheckFlags, int64 SkipFlags)
+bool UWebSocketBlueprintLibrary::JsonValueToUProperty(TSharedPtr<FJsonValue> JsonValue, MyProperty* Property, void* OutValue, int64 CheckFlags, int64 SkipFlags)
 {
 	if (!JsonValue.IsValid())
 	{
@@ -208,7 +208,7 @@ bool UWebSocketBlueprintLibrary::JsonValueToUProperty(TSharedPtr<FJsonValue> Jso
 		return false;
 	}
 
-	bool bArrayProperty = Property->IsA<UArrayProperty>();
+	bool bArrayProperty = Property->IsA<MyArrayProperty>();
 	bool bJsonArray = JsonValue->Type == EJson::Array;
 
 	if (!bJsonArray)
@@ -255,9 +255,9 @@ bool UWebSocketBlueprintLibrary::JsonValueToUProperty(TSharedPtr<FJsonValue> Jso
 
 extern bool GetTextFromObject(const TSharedRef<FJsonObject>& Obj, FText& TextOut);
 
-bool UWebSocketBlueprintLibrary::ConvertScalarJsonValueToUProperty(TSharedPtr<FJsonValue> JsonValue, UProperty* Property, void* OutValue, int64 CheckFlags, int64 SkipFlags)
+bool UWebSocketBlueprintLibrary::ConvertScalarJsonValueToUProperty(TSharedPtr<FJsonValue> JsonValue, MyProperty* Property, void* OutValue, int64 CheckFlags, int64 SkipFlags)
 {
-	if (UEnumProperty* EnumProperty = Cast<UEnumProperty>(Property))
+	if (MyEnumProperty* EnumProperty = PropertyCast<MyEnumProperty>(Property))
 	{
 		if (JsonValue->Type == EJson::String)
 		{
@@ -279,7 +279,7 @@ bool UWebSocketBlueprintLibrary::ConvertScalarJsonValueToUProperty(TSharedPtr<FJ
 			EnumProperty->GetUnderlyingProperty()->SetIntPropertyValue(OutValue, (int64)JsonValue->AsNumber());
 		}
 	}
-	else if (UNumericProperty *NumericProperty = Cast<UNumericProperty>(Property))
+	else if (MyNumericProperty *NumericProperty = PropertyCast<MyNumericProperty>(Property))
 	{
 		if (NumericProperty->IsEnum() && JsonValue->Type == EJson::String)
 		{
@@ -319,17 +319,17 @@ bool UWebSocketBlueprintLibrary::ConvertScalarJsonValueToUProperty(TSharedPtr<FJ
 			return false;
 		}
 	}
-	else if (UBoolProperty *BoolProperty = Cast<UBoolProperty>(Property))
+	else if (MyBoolProperty *BoolProperty = PropertyCast<MyBoolProperty>(Property))
 	{
 		// AsBool will log an error for completely inappropriate types (then give us a default)
 		BoolProperty->SetPropertyValue(OutValue, JsonValue->AsBool());
 	}
-	else if (UStrProperty *StringProperty = Cast<UStrProperty>(Property))
+	else if (MyStrProperty *StringProperty = PropertyCast<MyStrProperty>(Property))
 	{
 		// AsString will log an error for completely inappropriate types (then give us a default)
 		StringProperty->SetPropertyValue(OutValue, JsonValue->AsString());
 	}
-	else if (UArrayProperty *ArrayProperty = Cast<UArrayProperty>(Property))
+	else if (MyArrayProperty *ArrayProperty = PropertyCast<MyArrayProperty>(Property))
 	{
 		if (JsonValue->Type == EJson::Array)
 		{
@@ -360,7 +360,7 @@ bool UWebSocketBlueprintLibrary::ConvertScalarJsonValueToUProperty(TSharedPtr<FJ
 			return false;
 		}
 	}
-	else if (UMapProperty* MapProperty = Cast<UMapProperty>(Property))
+	else if (MyMapProperty* MapProperty = PropertyCast<MyMapProperty>(Property))
 	{
 		if (JsonValue->Type == EJson::Object)
 		{
@@ -396,7 +396,7 @@ bool UWebSocketBlueprintLibrary::ConvertScalarJsonValueToUProperty(TSharedPtr<FJ
 			return false;
 		}
 	}
-	else if (USetProperty* SetProperty = Cast<USetProperty>(Property))
+	else if (MySetProperty* SetProperty = PropertyCast<MySetProperty>(Property))
 	{
 		if (JsonValue->Type == EJson::Array)
 		{
@@ -428,7 +428,7 @@ bool UWebSocketBlueprintLibrary::ConvertScalarJsonValueToUProperty(TSharedPtr<FJ
 			return false;
 		}
 	}
-	else if (UTextProperty *TextProperty = Cast<UTextProperty>(Property))
+	else if (MyTextProperty *TextProperty = PropertyCast<MyTextProperty>(Property))
 	{
 		if (JsonValue->Type == EJson::String)
 		{
@@ -455,7 +455,7 @@ bool UWebSocketBlueprintLibrary::ConvertScalarJsonValueToUProperty(TSharedPtr<FJ
 			return false;
 		}
 	}
-	else if (UStructProperty *StructProperty = Cast<UStructProperty>(Property))
+	else if (MyStructProperty *StructProperty = PropertyCast<MyStructProperty>(Property))
 	{
 		static const FName NAME_DateTime(TEXT("DateTime"));
 		static const FName NAME_Color(TEXT("Color"));
@@ -534,7 +534,7 @@ bool UWebSocketBlueprintLibrary::ConvertScalarJsonValueToUProperty(TSharedPtr<FJ
 			return false;
 		}
 	}
-	else if (UObjectProperty *ObjectProperty = Cast<UObjectProperty>(Property) )
+	else if (MyObjectProperty *ObjectProperty = PropertyCast<MyObjectProperty>(Property) )
 	{
 		if (Cast<UObject>(ObjectProperty->GetObjectPropertyValue(OutValue)) == nullptr)
 		{
@@ -582,9 +582,9 @@ bool UWebSocketBlueprintLibrary::JsonAttributesToUStruct(const TMap< FString, TS
 	}
 
 	// iterate over the struct properties
-	for (TFieldIterator<UProperty> PropIt(StructDefinition); PropIt; ++PropIt)
+	for (TFieldIterator<MyProperty> PropIt(StructDefinition); PropIt; ++PropIt)
 	{
-		UProperty* Property = *PropIt;
+		MyProperty* Property = *PropIt;
 		FString PropertyName = Property->GetName();
 
 		// Check to see if we should ignore this property
@@ -651,9 +651,9 @@ bool UWebSocketBlueprintLibrary::UObjectToJsonAttributes(const UStruct* StructDe
 		return true;
 	}
 
-	for (TFieldIterator<UProperty> It(StructDefinition); It; ++It)
+	for (TFieldIterator<MyProperty> It(StructDefinition); It; ++It)
 	{
-		UProperty* Property = *It;
+		MyProperty* Property = *It;
 
 		// Check to see if we should ignore this property
 		if (CheckFlags != 0 && !Property->HasAnyPropertyFlags(CheckFlags))
@@ -672,7 +672,11 @@ bool UWebSocketBlueprintLibrary::UObjectToJsonAttributes(const UStruct* StructDe
 		TSharedPtr<FJsonValue> JsonValue = UPropertyToJsonValue(Property, Value, CheckFlags, SkipFlags);
 		if (!JsonValue.IsValid())
 		{
+#if ENGINE_MINOR_VERSION >= 25
+			FFieldClass* PropClass = Property->GetClass();
+#else
 			UClass* PropClass = Property->GetClass();
+#endif
 			UE_LOG(WebSocket, Warning, TEXT("UObjectToJsonObject - Unhandled property type '%s': %s"), *PropClass->GetName(), *Property->GetPathName());
 			continue;
 		}
@@ -684,7 +688,7 @@ bool UWebSocketBlueprintLibrary::UObjectToJsonAttributes(const UStruct* StructDe
 	return true;
 }
 
-TSharedPtr<FJsonValue> UWebSocketBlueprintLibrary::UPropertyToJsonValue(UProperty* Property, const void* Value, int64 CheckFlags, int64 SkipFlags)
+TSharedPtr<FJsonValue> UWebSocketBlueprintLibrary::UPropertyToJsonValue(MyProperty* Property, const void* Value, int64 CheckFlags, int64 SkipFlags)
 {
 	if (Property->ArrayDim == 1)
 	{
@@ -699,12 +703,12 @@ TSharedPtr<FJsonValue> UWebSocketBlueprintLibrary::UPropertyToJsonValue(UPropert
 	return MakeShareable(new FJsonValueArray(Array));
 }
 
-TSharedPtr<FJsonValue> UWebSocketBlueprintLibrary::ConvertScalarUPropertyToJsonValue(UProperty* Property, const void* Value, int64 CheckFlags, int64 SkipFlags)
+TSharedPtr<FJsonValue> UWebSocketBlueprintLibrary::ConvertScalarUPropertyToJsonValue(MyProperty* Property, const void* Value, int64 CheckFlags, int64 SkipFlags)
 {
 	// See if there's a custom export callback first, so it can override default behavior
 	
 
-	if (UEnumProperty* EnumProperty = Cast<UEnumProperty>(Property))
+	if (MyEnumProperty* EnumProperty = PropertyCast<MyEnumProperty>(Property))
 	{
 		// export enums as strings
 		UEnum* EnumDef = EnumProperty->GetEnum();
@@ -716,7 +720,7 @@ TSharedPtr<FJsonValue> UWebSocketBlueprintLibrary::ConvertScalarUPropertyToJsonV
 #endif
 		return MakeShareable(new FJsonValueString(StringValue));
 	}
-	else if (UNumericProperty *NumericProperty = Cast<UNumericProperty>(Property))
+	else if (MyNumericProperty *NumericProperty = PropertyCast<MyNumericProperty>(Property))
 	{
 		// see if it's an enum
 		UEnum* EnumDef = NumericProperty->GetIntPropertyEnum();
@@ -743,20 +747,20 @@ TSharedPtr<FJsonValue> UWebSocketBlueprintLibrary::ConvertScalarUPropertyToJsonV
 
 		// fall through to default
 	}
-	else if (UBoolProperty *BoolProperty = Cast<UBoolProperty>(Property))
+	else if (MyBoolProperty *BoolProperty = PropertyCast<MyBoolProperty>(Property))
 	{
 		// Export bools as bools
 		return MakeShareable(new FJsonValueBoolean(BoolProperty->GetPropertyValue(Value)));
 	}
-	else if (UStrProperty *StringProperty = Cast<UStrProperty>(Property))
+	else if (MyStrProperty *StringProperty = PropertyCast<MyStrProperty>(Property))
 	{
 		return MakeShareable(new FJsonValueString(StringProperty->GetPropertyValue(Value)));
 	}
-	else if (UTextProperty *TextProperty = Cast<UTextProperty>(Property))
+	else if (MyTextProperty *TextProperty = PropertyCast<MyTextProperty>(Property))
 	{
 		return MakeShareable(new FJsonValueString(TextProperty->GetPropertyValue(Value).ToString()));
 	}
-	else if (UArrayProperty *ArrayProperty = Cast<UArrayProperty>(Property))
+	else if (MyArrayProperty *ArrayProperty = PropertyCast<MyArrayProperty>(Property))
 	{
 		TArray< TSharedPtr<FJsonValue> > Out;
 		FScriptArrayHelper Helper(ArrayProperty, Value);
@@ -771,7 +775,7 @@ TSharedPtr<FJsonValue> UWebSocketBlueprintLibrary::ConvertScalarUPropertyToJsonV
 		}
 		return MakeShareable(new FJsonValueArray(Out));
 	}
-	else if (USetProperty* SetProperty = Cast<USetProperty>(Property))
+	else if (MySetProperty* SetProperty = PropertyCast<MySetProperty>(Property))
 	{
 		TArray< TSharedPtr<FJsonValue> > Out;
 		FScriptSetHelper Helper(SetProperty, Value);
@@ -789,7 +793,7 @@ TSharedPtr<FJsonValue> UWebSocketBlueprintLibrary::ConvertScalarUPropertyToJsonV
 		}
 		return MakeShareable(new FJsonValueArray(Out));
 	}
-	else if (UMapProperty* MapProperty = Cast<UMapProperty>(Property))
+	else if (MyMapProperty* MapProperty = PropertyCast<MyMapProperty>(Property))
 	{
 		TSharedRef<FJsonObject> Out = MakeShareable(new FJsonObject());
 
@@ -809,7 +813,7 @@ TSharedPtr<FJsonValue> UWebSocketBlueprintLibrary::ConvertScalarUPropertyToJsonV
 
 		return MakeShareable(new FJsonValueObject(Out));
 	}
-	else if (UStructProperty *StructProperty = Cast<UStructProperty>(Property))
+	else if (MyStructProperty *StructProperty = PropertyCast<MyStructProperty>(Property))
 	{
 		UScriptStruct::ICppStructOps* TheCppStructOps = StructProperty->Struct->GetCppStructOps();
 		// Intentionally exclude the JSON Object wrapper, which specifically needs to export JSON in an object representation instead of a string
@@ -827,7 +831,7 @@ TSharedPtr<FJsonValue> UWebSocketBlueprintLibrary::ConvertScalarUPropertyToJsonV
 		}
 		// fall through to default
 	}
-	else if (UObjectProperty* ObjectProperty = Cast<UObjectProperty>(Property))
+	else if (MyObjectProperty* ObjectProperty = PropertyCast<MyObjectProperty>(Property))
 	{
 		UObject* tmpValue = Cast<UObject>(ObjectProperty->GetObjectPropertyValue(Value));
 		

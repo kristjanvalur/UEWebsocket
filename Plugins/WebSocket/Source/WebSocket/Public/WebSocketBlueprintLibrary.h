@@ -29,6 +29,8 @@
 #include "Internationalization/Culture.h"
 #include "UObject/TextProperty.h"
 #include "UObject/PropertyPortFlags.h"
+#include "Runtime/Launch/Resources/Version.h"
+
 #include "WebSocketBlueprintLibrary.generated.h"
 
 
@@ -167,12 +169,42 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "WebSocket")
 	static bool ObjectToJson(UObject* Object, FString& data);
 
-	static bool JsonValueToUProperty(TSharedPtr<FJsonValue> JsonValue, UProperty* Property, void* OutValue, int64 CheckFlags, int64 SkipFlags);
-	static bool ConvertScalarJsonValueToUProperty(TSharedPtr<FJsonValue> JsonValue, UProperty* Property, void* OutValue, int64 CheckFlags, int64 SkipFlags);
+#if ENGINE_MINOR_VERSION >= 25
+#define MyProperty FProperty
+#define MyArrayProperty FArrayProperty
+#define MyNumericProperty FNumericProperty
+#define MyBoolProperty FBoolProperty
+#define MyStrProperty FStrProperty
+#define MyMapProperty FMapProperty
+#define MySetProperty FSetProperty
+#define MyStructProperty FStructProperty
+#define MyObjectProperty FObjectProperty
+#define MyTextProperty FTextProperty
+#define MyEnumProperty FEnumProperty
+#define PropertyCast CastField
+
+#else
+#define MyProperty UProperty
+#define MyArrayProperty UArrayProperty
+#define MyNumericProperty UNumericProperty
+#define MyBoolProperty UBoolProperty
+#define MyStrProperty UStrProperty
+#define MyMapProperty UMapProperty
+#define MySetProperty USetProperty
+#define MyStructProperty UStuctProperty
+#define MyObjectProperty UObjectProperty
+#define MyTextProperty UTextProperty
+#define MyEnumProperty UEnumProperty
+#define PropertyCast Cast
+
+#endif
+
+	static bool JsonValueToUProperty(TSharedPtr<FJsonValue> JsonValue, MyProperty* Property, void* OutValue, int64 CheckFlags, int64 SkipFlags);
+	static bool ConvertScalarJsonValueToUProperty(TSharedPtr<FJsonValue> JsonValue, MyProperty* Property, void* OutValue, int64 CheckFlags, int64 SkipFlags);
 	static bool JsonObjectToUStruct(const TSharedRef<FJsonObject>& JsonObject, const UStruct* StructDefinition, void* OutStruct, int64 CheckFlags, int64 SkipFlags);
 	static bool JsonAttributesToUStruct(const TMap< FString, TSharedPtr<FJsonValue> >& JsonAttributes, const UStruct* StructDefinition, void* OutStruct, int64 CheckFlags, int64 SkipFlags);
 	static bool UObjectToJsonObject(const UStruct* StructDefinition, const void* Struct, TSharedRef<FJsonObject> OutJsonObject, int64 CheckFlags, int64 SkipFlags);
 	static bool UObjectToJsonAttributes(const UStruct* StructDefinition, const void* Struct, TMap< FString, TSharedPtr<FJsonValue> >& OutJsonAttributes, int64 CheckFlags, int64 SkipFlags);
-	static TSharedPtr<FJsonValue> UPropertyToJsonValue(UProperty* Property, const void* Value, int64 CheckFlags, int64 SkipFlags);
-	static TSharedPtr<FJsonValue> ConvertScalarUPropertyToJsonValue(UProperty* Property, const void* Value, int64 CheckFlags, int64 SkipFlags);
+	static TSharedPtr<FJsonValue> UPropertyToJsonValue(MyProperty* Property, const void* Value, int64 CheckFlags, int64 SkipFlags);
+	static TSharedPtr<FJsonValue> ConvertScalarUPropertyToJsonValue(MyProperty* Property, const void* Value, int64 CheckFlags, int64 SkipFlags);
 };
