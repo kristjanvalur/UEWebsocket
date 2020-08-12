@@ -12,8 +12,8 @@
 	<gradleCopies>
      
 
-    
-      <copyDir src="$S(PluginDir)/ThirdParty/Android/Java"
+<!--
+       <copyDir src="$S(PluginDir)/ThirdParty/Android/Java"
 					dst = "$S(BuildDir)/src" />
     
       <copyDir src="$S(PluginDir)/ThirdParty/Android/Java"
@@ -24,6 +24,7 @@
     
       <copyDir src="$S(PluginDir)/ThirdParty/Android/permission_library"
 					dst="$S(BuildDir)/gradle/permission_library" />
+ -->
       
 	</gradleCopies>
 
@@ -37,8 +38,8 @@
   
   <gradleProperties> 
       <insert>
-        android.useAndroidX=true
-        android.enableJetifier=true
+       <!--  android.useAndroidX=true
+        android.enableJetifier=true -->
       </insert>
   </gradleProperties>
 
